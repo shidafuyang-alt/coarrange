@@ -1,0 +1,84 @@
+{
+  "method": "File integrity, BS.1770 LUFS, chroma similarity, CLAP style text/audio cosine. CLAP values are comparative similarities, not probabilities or a quality guarantee. No human listening review is claimed.",
+  "results": [
+    {
+      "duration": 20.0,
+      "sample_rate": 44100,
+      "channels": 2,
+      "peak": 0.999969482421875,
+      "lufs": -7.965930901918784,
+      "clipped_sample_fraction": 0.0001201814058956916,
+      "rms": 0.3311531709745135,
+      "file": "source-excerpt.wav",
+      "clap_cosine_scores": {
+        "Instrumental classical chamber music with expressive violin, piano and acoustic strings.": 0.24291940033435822,
+        "Instrumental classical piano music, elegant arpeggios and a warm concert hall.": 0.26541027426719666,
+        "A female singer performing modern pop music, electronic drums, bass and synthesizers.": 0.6305126547813416,
+        "Electronic dance music with a loud beat and synthesizers.": 0.3524748384952545,
+        "Distorted electric guitars and loud drums playing rock music.": 0.2671738564968109
+      },
+      "normalized_file": "source-excerpt.wav",
+      "normalized_lufs": -20.999999999999982
+    },
+    {
+      "duration": 20.0,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.891265869140625,
+      "lufs": -16.691060501888575,
+      "clipped_sample_fraction": 0.0,
+      "rms": 0.09992491021151775,
+      "file": "28a5caad-b0c3-9c23-239a-7a02801f9cf0.wav",
+      "clap_cosine_scores": {
+        "Instrumental classical chamber music with expressive violin, piano and acoustic strings.": 0.35402944684028625,
+        "Instrumental classical piano music, elegant arpeggios and a warm concert hall.": 0.47222277522087097,
+        "A female singer performing modern pop music, electronic drums, bass and synthesizers.": 0.30302807688713074,
+        "Electronic dance music with a loud beat and synthesizers.": 0.15152248740196228,
+        "Distorted electric guitars and loud drums playing rock music.": 0.0683424100279808
+      },
+      "aligned_chroma_cosine": 0.4296433136045661,
+      "normalized_file": "28a5caad-b0c3-9c23-239a-7a02801f9cf0.wav",
+      "normalized_lufs": -21.000000000000007
+    },
+    {
+      "duration": 20.0,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.891265869140625,
+      "lufs": -20.587296529937436,
+      "clipped_sample_fraction": 0.0,
+      "rms": 0.06414340431709364,
+      "file": "cbfc1b05-d1c5-da50-7e08-f955bbd17dad.wav",
+      "clap_cosine_scores": {
+        "Instrumental classical chamber music with expressive violin, piano and acoustic strings.": 0.3951241075992584,
+        "Instrumental classical piano music, elegant arpeggios and a warm concert hall.": 0.49683141708374023,
+        "A female singer performing modern pop music, electronic drums, bass and synthesizers.": 0.31152355670928955,
+        "Electronic dance music with a loud beat and synthesizers.": 0.05526105687022209,
+        "Distorted electric guitars and loud drums playing rock music.": 0.03195354714989662
+      },
+      "aligned_chroma_cosine": 0.5421669131071304,
+      "normalized_file": "cbfc1b05-d1c5-da50-7e08-f955bbd17dad.wav",
+      "normalized_lufs": -21.000000000000007
+    },
+    {
+      "duration": 20.0,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.891265869140625,
+      "lufs": -16.545583174883625,
+      "clipped_sample_fraction": 0.0,
+      "rms": 0.10900158196333189,
+      "file": "1e6c5a9b-5506-721a-e042-b763eece8f07.wav",
+      "clap_cosine_scores": {
+        "Instrumental classical chamber music with expressive violin, piano and acoustic strings.": 0.48379743099212646,
+        "Instrumental classical piano music, elegant arpeggios and a warm concert hall.": 0.47609496116638184,
+        "A female singer performing modern pop music, electronic drums, bass and synthesizers.": 0.33803388476371765,
+        "Electronic dance music with a loud beat and synthesizers.": 0.15193261206150055,
+        "Distorted electric guitars and loud drums playing rock music.": 0.04504367709159851
+      },
+      "aligned_chroma_cosine": 0.424696279595953,
+      "normalized_file": "1e6c5a9b-5506-721a-e042-b763eece8f07.wav",
+      "normalized_lufs": -21.000000000000004
+    }
+  ]
+}

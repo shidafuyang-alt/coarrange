@@ -1,0 +1,19 @@
+{
+  "name": "coarrange",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A bilingual music arrangement demo with prepared AI audio and an editable sampled-instrument workbench.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
