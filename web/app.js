@@ -55,8 +55,53 @@ Object.assign(tracks, {
     duration: '0:20',
     caseStudy: true,
   },
+  'song-chamber': {
+    title: 'hate that i made you love me · 室内古典',
+    subtitle: '转录旋律 · 重新编配',
+    style: 'Classical / Melody-locked',
+    cover: 'assets/cover-classical.png',
+    src: 'assets/song-chamber.m4a',
+    duration: '0:20',
+    caseStudy: true,
+  },
+  'song-nocturne': {
+    title: 'hate that i made you love me · 钢琴夜曲',
+    subtitle: '转录旋律 · 重新编配',
+    style: 'Piano / Melody-locked',
+    cover: 'assets/cover-classical.png',
+    src: 'assets/song-nocturne.m4a',
+    duration: '0:20',
+    caseStudy: true,
+  },
+  'song-erhu': {
+    title: 'hate that i made you love me · 二胡迪斯科',
+    subtitle: '转录旋律 · 重新编配',
+    style: 'Erhu disco / Melody-locked',
+    cover: 'assets/cover-pop.png',
+    src: 'assets/song-erhu.m4a',
+    duration: '0:20',
+    caseStudy: true,
+  },
+  'song-lofi': {
+    title: 'hate that i made you love me · 深夜 Lo-fi',
+    subtitle: '转录旋律 · 重新编配',
+    style: 'Lo-fi / Melody-locked',
+    cover: 'assets/cover-classical.png',
+    src: 'assets/song-lofi.m4a',
+    duration: '0:20',
+    caseStudy: true,
+  },
+  'song-chip': {
+    title: 'hate that i made you love me · 8-bit 冒险',
+    subtitle: '转录旋律 · 重新编配',
+    style: 'Chiptune / Melody-locked',
+    cover: 'assets/cover-pop.png',
+    src: 'assets/song-chip.m4a',
+    duration: '0:20',
+    caseStudy: true,
+  },
   'song-classical': {
-    title: 'hate that i made you love me · 古典改编',
+    title: 'hate that i made you love me · 早期 AI 改编',
     subtitle: '真实 AI 改编 · 古典再创作',
     style: 'Classical / AI cover',
     cover: 'assets/cover-classical.png',
@@ -75,7 +120,7 @@ Object.assign(tracks, {
   },
 });
 let view = 'home',
-  current = 'song-classical',
+  current = 'song-chamber',
   chosenStyle = 'classical',
   customAudio = null,
   customFilename = '',
@@ -154,6 +199,7 @@ function render() {
   icons();
   if (view === 'arrange') paintNotes();
   if (view === 'hum') window.HumToMusic?.sync();
+  if ($('.remix-deck')) CoRemix.mount().catch(() => {});
   updatePlayer();
 }
 function trackCard(key) {
@@ -225,6 +271,7 @@ function updatePlayer() {
   icons();
 }
 async function playTrack(key) {
+  CoRemix.stop();
   if (studioPlaying) stopStudio();
   if (key === 'source' && customAudio) {
     if (current !== 'source') {
@@ -301,6 +348,7 @@ function showModal(type) {
   $('.modal [data-action="close-modal"]').focus();
 }
 async function startStudio() {
+  CoRemix.stop();
   await CoStudio.play();
 }
 function stopStudio() {
@@ -684,6 +732,7 @@ document.addEventListener('input', (e) => {
   }
   if (e.target.id === 'volume') {
     audio.volume = +e.target.value;
+    CoRemix.volume(audio.volume);
     if (studioMaster) studioMaster.gain.value = 0.38 * +e.target.value;
   }
   if (e.target.id === 'seek' && audio.duration)

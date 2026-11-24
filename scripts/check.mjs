@@ -9,7 +9,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const web = join(root, 'web');
 const files = (await readdir(web)).filter((name) => name.endsWith('.js'));
 for (const name of files) {
-  const result = spawnSync(process.execPath, ['--check', join(web, name)], { encoding: 'utf8' });
+  const result = spawnSync(process.execPath, ['--check', join(web, name)], {
+    encoding: 'utf8',
+  });
   assert.equal(result.status, 0, result.stderr);
 }
 
@@ -29,7 +31,11 @@ for (const style of styles) {
   assert.ok(style.parts.length <= 8);
   for (const part of style.parts)
     assert.ok(instruments.some((instrument) => instrument.id === part));
-  const prepared = { pop: 'pop.m4a', classical: 'classical.m4a', soft: 'classical-soft.m4a' };
+  const prepared = {
+    pop: 'pop.m4a',
+    classical: 'classical.m4a',
+    soft: 'classical-soft.m4a',
+  };
   await asset(prepared[style.id] || `theme-${style.id}.m4a`);
 }
 for (const instrument of instruments) {
@@ -42,6 +48,8 @@ for (const name of [
   'song-original.m4a',
   'song-classical.m4a',
   'song-alternative.m4a',
+  ...['chamber', 'nocturne', 'erhu', 'lofi', 'chip'].map((id) => `song-${id}.m4a`),
+  'song-melody.json',
   'score.json',
 ]) {
   await asset(name);
