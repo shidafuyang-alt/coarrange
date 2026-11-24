@@ -57,7 +57,7 @@ window.CoLocale = (() => {
     'hate that i made you love me · 深夜 Lo-fi': 'hate that i made you love me · Late-night lo-fi',
     'hate that i made you love me · 8-bit 冒险': 'hate that i made you love me · 8-bit adventure',
     流行原曲: 'Pop original',
-    小提琴领唱: 'Violin sings lead',
+    '钢琴主奏，弦乐衬托': 'Piano lead, soft strings',
     钢琴夜曲: 'Nocturne',
     一架钢琴: 'Solo piano',
     二胡也能蹦: 'Erhu hits the club',
@@ -73,7 +73,8 @@ window.CoLocale = (() => {
     '按 1–6 切换，7 听早期 AI 对比，0 开关自动 DJ，P 播放或停止。亮线是从人声提取的旋律，五个改编都演奏这条线。':
       'Press 1–6 to switch, 7 for the early AI cover, 0 for Auto-DJ, P to play or stop. The line is the melody extracted from the vocal; all five remixes play it.',
     '同一旋律 · 六种声音': 'One melody · six sounds',
-    '小提琴沿着人声的旋律，逐音重新演奏': 'A violin plays the vocal line, note by note',
+    '钢琴逐音弹出人声的旋律，弦乐在下方衬托':
+      'The piano plays the vocal line, with strings underneath',
     '对比：早期 AI 改编': 'Compare: early AI cover',
     '先用 Demucs 分离人声，再用 CREPE 转录旋律与滑音，并从伴奏中识别和弦。五个新版本用采样乐器演奏同一条旋律，没有叠加原曲音频。':
       'Demucs isolates the vocal, CREPE transcribes its notes and slides, and the chords are read from the backing. Five new versions play that same line on sampled or synthesized instruments, with no source audio mixed in.',

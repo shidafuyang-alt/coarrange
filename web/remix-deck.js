@@ -12,7 +12,7 @@ window.CoRemix = (() => {
     {
       id: 'chamber',
       name: '室内古典',
-      hint: '小提琴领唱',
+      hint: '钢琴主奏，弦乐衬托',
       icon: 'music-2',
       color: '#8d6fb8',
     },

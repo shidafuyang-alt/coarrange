@@ -266,43 +266,38 @@ def vl(bar, lo=58, n=4):
 
 # ---------------------------------------------------------------- styles
 def chamber():
+    """Piano concerto texture: piano carries the tune, strings stay underneath."""
     m = Mix()
-    m.sing("violin", 12, 2.3, pan=-0.08, send=0.34, expr=0.85)
-    # second half: violin section doubles the tune an octave below
-    m.sing("violins", 12, 0.75, pan=0.2, send=0.4, expr=0.4, t0=9.9)
-    m.sing("cello", 0, 0.45, pan=0.25, send=0.35, expr=0.4, t0=11.5)
-    m.note("piano", 49, tb(0), 1.4, 0.42, send=0.3)
+    for n in NOTES:
+        v = 0.55 + 0.45 * (n["velocity"] - 45) / 59
+        if n["duration"] < 0.09:
+            v *= 0.75  # ornaments stay light
+        late = n["time"] > 9.9
+        hold = n["duration"] + 0.3
+        m.note("pianof", n["pitch"] + 12, n["time"], hold, v * 1.75, pan=0.05, send=0.3, release=0.5, human=0.003)
+        if n["duration"] > 0.12:  # octaves give the line weight
+            m.note("pianof", n["pitch"] + (24 if late else 0), n["time"], hold, v * (0.6 if late else 0.5), pan=0.12, send=0.3, release=0.5, human=0.003)
+    m.note("piano", 42, tb(0), 0.6, 0.35, send=0.3)
     for i in range(8):
         c, r, b = chord_at(i)
-        full = i >= 4
-        dyn = [0.34, 0.5, 0.56, 0.62, 0.72, 0.78, 0.82, 0.8][i]
-        up = vl(i, 53)
-        dur = 4 * BEAT
-        for k, p in enumerate(up):
-            m.note("violins", p, tb(b), dur, 0.105 * dyn * (1.5 if full else 1.1), pan=[-0.5, -0.2, 0.3, 0.5][k], send=0.5, attack=0.22, release=0.45, human=0.02)
-        bass = r + 12 if r < 36 else r
-        m.note("cello", bass, tb(b), dur, 0.32 * dyn, pan=0.32, send=0.4, attack=0.10, release=0.4)
-        if i >= 1:  # the song's eighth-note bass pulse, re-scored for piano left hand
-            for e in range(8):
-                m.note("piano", r if e % 2 == 0 else r + 12, tb(b + e / 2), 0.36, (0.36 if e % 4 == 0 else 0.25) * dyn, pan=-0.15, send=0.2)
-        arp = [up[0] - 12, up[1] - 12, up[2] - 12, up[0], up[1], up[0], up[2] - 12, up[1] - 12]
-        if i == 0:  # the track's stop-time bar: rolled chords only
-            for k, p in enumerate([49, 56, 60, 65, 68]):
-                m.note("harp", p, tb(b) + k * 0.06, 2.0, 0.34, pan=0.4, send=0.5, release=1.2)
-                m.note("piano", p, tb(b + 2) + k * 0.02, 1.2, 0.22, send=0.3)
-        else:
-            for e in range(8):
-                m.note("piano", arp[e], tb(b + e / 2), 0.9, 0.33 * dyn * (1.15 if e % 4 == 0 else 1), pan=-0.2, send=0.28, release=0.5)
-        if full:
-            for e in range(16):
-                p = up[[0, 1, 2, 3, 2, 1, 2, 3][e % 8]] + (12 if e % 8 in (3, 7) else 0)
-                m.note("harp", p, tb(b + e / 4), 0.5, 0.11 * dyn, pan=0.45, send=0.4, release=0.6)
-            for e in (1, 3):  # backbeat accents where the snare was
-                for p in up[:3]:
-                    m.note("pianof", p, tb(b + e), 0.3, 0.2 * dyn, pan=-0.2, send=0.25)
-    # cello answers the singer in the two vocal gaps
-    for t, p, d in ((11.6, 57, .5), (12.1, 60, .5), (12.6, 63, .7)):
-        m.note("cello", p, tb(t), d * BEAT, 0.5, pan=0.3, send=0.4, attack=0.05, release=0.2)
+        dyn = [0.5, 0.6, 0.66, 0.72, 0.85, 0.9, 0.95, 0.9][i]
+        low, up = (r + 12 if r < 33 else r), vl(i, 53)
+        # left hand: rolled broken chords, always below the melody
+        wide = [low, low + 7, up[0], up[1], up[2], up[1], up[0], low + 7]
+        for e, p in enumerate(wide):
+            m.note("piano", p, tb(b + e / 2), 1.5, (0.46 if e == 0 else 0.3) * dyn, pan=-0.18, send=0.28, release=0.5)
+        # orchestra: cello bass, then violin section, both kept soft and slow to speak
+        m.note("cello", low, tb(b), 4 * BEAT, 0.26 * dyn, pan=0.35, send=0.5, attack=0.18, release=0.5)
+        if i:
+            for k, p in enumerate(up[:3]):
+                m.note("violins", p, tb(b), 4 * BEAT, 0.12 * dyn, pan=[-0.5, 0.2, 0.5][k], send=0.6, attack=0.35, release=0.6, human=0.02)
+        if i >= 4:
+            m.note("violins", up[0] + 12, tb(b), 4 * BEAT, 0.07 * dyn, pan=-0.35, send=0.65, attack=0.6, release=0.7)
+            for e in (0, 2):  # harp colour on the strong beats
+                m.note("harp", up[1] + 12, tb(b + e + 0.5), 0.8, 0.10, pan=0.5, send=0.5, release=0.8)
+    # violin section answers in the two-beat vocal rest
+    for t, p, d in ((11.6, 72, 0.5), (12.1, 75, 0.5), (12.6, 77, 0.6)):
+        m.note("violins", p, tb(t), d * BEAT, 0.28, pan=-0.3, send=0.5, attack=0.07, release=0.3)
     m.render(f"{OUT}/song-chamber.wav", rt=2.1)
 
 
