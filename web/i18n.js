@@ -522,6 +522,89 @@ window.CoLocale = (() => {
     轻柔版: 'Gentle version',
     修订: 'Revision',
     夏日主题: 'Summer theme',
+    哼唱成曲: 'Hum to music',
+    '哼一段旋律。': 'Hum a melody.',
+    '用麦克风哼 5 到 15 秒。确认识别出的旋律后，选一种风格，生成可以播放的伴奏。':
+      'Hum for 5 to 15 seconds. Preview the recognized melody, choose a style, and make an accompaniment.',
+    '1 哼唱': '1 Hum',
+    '2 识别': '2 Recognize',
+    '3 试听': '3 Preview',
+    '4 选风格': '4 Choose a style',
+    '5 生成': '5 Arrange',
+    你的哼唱: 'Your humming',
+    准备哼唱: 'Ready to hum',
+    '最长 15 秒': 'Up to 15 seconds',
+    正在录音: 'Recording',
+    录音电平: 'Recording level',
+    再录一次: 'Record again',
+    开始哼唱: 'Start humming',
+    停止: 'Stop',
+    听我的录音: 'Play my recording',
+    或上传一段短音频: 'Or upload a short recording',
+    'WAV、MP3、M4A · 15 秒以内 · 在浏览器里识别':
+      'WAV, MP3, M4A · Up to 15 seconds · Recognized in the browser',
+    '音频只在这台浏览器里处理，不会上传。适合单声部哼唱，歌曲和嘈杂背景不会准确。':
+      'Audio stays in this browser and is not uploaded. This is for one hummed line, not a song or a noisy recording.',
+    '音高识别使用 Spotify Basic Pitch 1.0.1（Apache-2.0，Copyright 2022 Spotify AB）。':
+      'Pitch recognition uses Spotify Basic Pitch 1.0.1 (Apache-2.0, Copyright 2022 Spotify AB).',
+    浏览器音高模型已就绪: 'The browser pitch model is ready',
+    '音高模型没有加载。请先运行 npm run pitch-model，再用 npm start 打开页面。':
+      'The pitch model did not load. Run npm run pitch-model, then open the page with npm start.',
+    '正在加载浏览器音高模型…': 'Loading the browser pitch model…',
+    识别出的旋律: 'Recognized melody',
+    '哼完以后，旋律会显示在这里。': 'The melody appears here after recognition.',
+    '识别完成后可以单独试听，不会马上改动编曲工作台。':
+      'You can preview the melody before it changes the arrangement workbench.',
+    '已识别 ': 'Recognized ',
+    ' 个音。可以先试听，再决定要不要重录。': ' notes. Preview them before recording again.',
+    '正在识别音高…': 'Recognizing pitch…',
+    识别旋律: 'Recognize melody',
+    试听旋律: 'Preview melody',
+    换一段再试: 'Try another take',
+    选择伴奏风格: 'Choose an accompaniment style',
+    生成编曲: 'Make the arrangement',
+    '已截取前 15 秒。': 'Only the first 15 seconds were used.',
+    '录音太短了，请至少哼 1 秒。': 'That recording is too short. Hum for at least one second.',
+    '这段录音几乎没有声音。请靠近麦克风再试。':
+      'This recording is almost silent. Move closer to the microphone and try again.',
+    这段录音还不能识别: 'This recording cannot be recognized yet',
+    '录音完成，可以听一遍，也可以直接识别。':
+      'Recording complete. Listen back, or recognize it now.',
+    '麦克风权限被拒绝。请在浏览器设置里允许后重试。':
+      'Microphone permission was denied. Allow it in the browser settings and try again.',
+    '没有找到可用的麦克风。': 'No microphone was found.',
+    '麦克风正被其他程序占用。': 'The microphone is being used by another program.',
+    '这个浏览器没有麦克风接口。': 'This browser does not provide a microphone.',
+    '浏览器不允许在直接打开的文件里使用麦克风。请通过本地服务器访问。':
+      'The browser blocks the microphone when a file is opened directly. Open the page through the local server.',
+    '无法使用麦克风。': 'The microphone could not be used.',
+    需要通过本地服务器打开: 'Open this page through the local server',
+    当前浏览器不能录音: 'This browser cannot record',
+    没有开始录音: 'Recording did not start',
+    '正在聆听…哼得慢一点，一个音一个音。': 'Listening… hum slowly, one note at a time.',
+    '录音是空的，或这个浏览器无法解码刚录下的音频。请再试一次。':
+      'The recording was empty, or this browser could not decode it. Please try again.',
+    录音没有保存下来: 'The recording was not saved',
+    '文件请小于 8 MB。': 'Please use a file smaller than 8 MB.',
+    这个文件太大了: 'This file is too large',
+    '这个音频无法解码。请换 WAV、MP3 或 M4A。':
+      'This audio could not be decoded. Use WAV, MP3, or M4A.',
+    没有读到音频: 'No audio was read',
+    '这段录音暂时无法播放。': 'This recording cannot be played right now.',
+    '没有可用的录音。': 'There is no recording to recognize.',
+    转录失败: 'Transcription failed',
+    识别没有完成: 'Recognition did not finish',
+    识别没有成功: 'Recognition did not succeed',
+    '请先识别出旋律，再生成编曲。': 'Recognize a melody before making an arrangement.',
+    '可以重录，或再识别一次。': 'Record again, or recognize this take once more.',
+    '已从这段录音中识别出旋律。请先试听，再生成伴奏。':
+      'A melody was recognized from this recording. Preview it, then make an accompaniment.',
+    '没有识别出稳定的音高。请哼得稍慢一些，并尽量减少背景噪声。':
+      'No stable pitch was found. Hum a little slower and reduce background noise.',
+    '没有检测到足够的声音。请靠近麦克风，哼一段清晰的旋律后再试。':
+      'Not enough sound was detected. Move closer and hum a clear melody.',
+    录音是空的: 'The recording is empty',
+    '已从录音中识别出旋律。': 'A melody was recognized from the recording.',
   };
   let language = 'zh';
   try {

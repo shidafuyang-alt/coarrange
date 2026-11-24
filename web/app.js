@@ -119,6 +119,7 @@ function time(t) {
   return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 }
 function setView(next) {
+  if (view === 'hum' && next !== 'hum') window.HumToMusic?.leave();
   if (studioPlaying) stopStudio();
   view = next;
   location.hash = next;
@@ -131,6 +132,7 @@ function render() {
     create: '灵感创作',
     transform: '风格转换',
     arrange: '编曲工作台',
+    hum: '哼唱成曲',
     library: '我的作品库',
     favorites: '我的收藏',
   };
@@ -144,12 +146,14 @@ function render() {
       create: createView,
       transform: transformView,
       arrange: arrangeView,
+      hum: () => window.HumToMusic.view(),
       library: libraryView,
       favorites: libraryView,
     }[view] || homeView
   )();
   icons();
   if (view === 'arrange') paintNotes();
+  if (view === 'hum') window.HumToMusic?.sync();
   updatePlayer();
 }
 function trackCard(key) {
@@ -762,6 +766,7 @@ audio.addEventListener('error', () => toast('这个音频无法播放，请尝�
 window.addEventListener('hashchange', () => {
   const next = location.hash.slice(1) || 'home';
   if (next !== view) {
+    if (view === 'hum') window.HumToMusic?.leave();
     if (studioPlaying) stopStudio();
     view = next;
     render();

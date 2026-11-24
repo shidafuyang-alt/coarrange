@@ -16,6 +16,15 @@ npm start
 
 Open **http://localhost:8788**. No package installation is required to run the app. To use another port, run `npm start -- --port 8080`.
 
+Hum to Music recognizes a short recording in the browser with Spotify Basic Pitch 1.0.1 (Apache-2.0, Copyright 2022 Spotify AB). The model weights are not stored in git. Download them once, then start the app:
+
+```bash
+npm run pitch-model
+npm start
+```
+
+Open **http://localhost:8788/#hum**. Licenses are in [web/third-party/NOTICES.txt](web/third-party/NOTICES.txt).
+
 Alternatively, with Python 3 installed:
 
 ```bash

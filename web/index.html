@@ -21,12 +21,15 @@
     <link rel="stylesheet" href="appearance.css" />
     <link rel="stylesheet" href="song-case.css" />
     <link rel="stylesheet" href="expanded-music.css" />
+    <link rel="stylesheet" href="hum.css" />
     <script defer src="assets/lucide.min.js"></script>
     <script defer src="i18n.js"></script>
     <script defer src="music-catalog.js"></script>
     <script defer src="sampler.js"></script>
     <script defer src="studio-score.js"></script>
     <script defer src="studio.js"></script>
+    <script type="module" src="vendor/co-pitch.js"></script>
+    <script defer src="hum.js"></script>
     <script defer src="styles-ui.js"></script>
     <script defer src="song-waveforms.js"></script>
     <script defer src="song-case.js"></script>
@@ -59,6 +62,9 @@
           </button>
           <button class="nav-item" data-view="transform">
             <i data-lucide="shuffle"></i>风格转换
+          </button>
+          <button class="nav-item" data-view="hum">
+            <i data-lucide="audio-lines"></i>哼唱成曲
           </button>
           <button class="nav-item" data-view="arrange">
             <i data-lucide="sliders-horizontal"></i>编曲工作台<span class="nav-mini">PRO</span>

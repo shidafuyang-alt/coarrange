@@ -3,6 +3,13 @@ window.CoStudio = (() => {
   const catalog = MusicCatalog.instruments,
     styles = MusicCatalog.styles;
   const find = (id) => catalog.find((i) => i.id === id);
+  const escapeHtml = (value) =>
+    String(value).replace(
+      /[&<>"']/g,
+      (character) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character],
+    );
+  let melodyLabel = '晴日来信';
   const state = {
     style: 'classical',
     parts: ['piano', 'strings', 'cello', 'harp'],
@@ -28,7 +35,7 @@ window.CoStudio = (() => {
     const preset = styles.find((s) => s.id === state.style);
     return `<div class="view-title studio-header"><section><p class="eyebrow">BUILD YOUR OWN UNEXPECTED SOUND.</p><h1>编曲，放开玩。</h1><p>让二胡领唱，让贝斯蹦迪。换乐器、加声部，亲手听见反差。</p></section><div><label class="btn btn-outline midi-upload-label" for="midi-upload">${icon('upload')}导入 MIDI<input type="file" id="midi-upload" class="file-input" accept=".mid,.midi"></label><button class="btn btn-primary" data-action="export-midi">${icon('download')}导出 MIDI</button></div></div>
     <section class="instrument-intro"><div><span class="card-icon">${icon('music-2')}</span><div><h2>你的乐器架，今天想加谁？</h2><p>31 种音色 · 二胡真实采样 · 最多 8 个声部</p></div></div><button class="btn btn-primary" data-add-instrument ${state.parts.length >= 8 ? 'disabled' : ''}>${icon('plus')}添加乐器</button></section>
-    <div class="studio-toolbar"><strong id="studio-name">${studioName}</strong><span class="spacer"></span><label>配器起点<select id="studio-preset" aria-label="选择编曲风格">${styles.map((s) => `<option value="${s.id}" ${s.id === state.style ? 'selected' : ''}>${s.name}</option>`).join('')}</select></label><label>速度 <input type="number" id="studio-bpm" aria-label="编曲速度 BPM" min="50" max="180" value="${bpm}"> BPM</label><label>移调 <select id="studio-key" aria-label="移调半音">${[-2, -1, 0, 1, 2].map((v) => `<option value="${v}" ${v === transpose ? 'selected' : ''}>${v === 0 ? '原调' : (v > 0 ? '＋' : '−') + Math.abs(v) + ' 半音'}</option>`).join('')}</select></label><button class="text-btn" data-action="reset-studio">重置</button></div>
+    <div class="studio-toolbar"><strong id="studio-name"><span data-i18n-ignore>${escapeHtml(melodyLabel)}</span> · ${styles.find((s) => s.id === state.style).name}</strong><span class="spacer"></span><label>配器起点<select id="studio-preset" aria-label="选择编曲风格">${styles.map((s) => `<option value="${s.id}" ${s.id === state.style ? 'selected' : ''}>${s.name}</option>`).join('')}</select></label><label>速度 <input type="number" id="studio-bpm" aria-label="编曲速度 BPM" min="50" max="180" value="${bpm}"> BPM</label><label>移调 <select id="studio-key" aria-label="移调半音">${[-2, -1, 0, 1, 2].map((v) => `<option value="${v}" ${v === transpose ? 'selected' : ''}>${v === 0 ? '原调' : (v > 0 ? '＋' : '−') + Math.abs(v) + ' 半音'}</option>`).join('')}</select></label><button class="text-btn" data-action="reset-studio">重置</button></div>
     <div class="studio-layout"><section class="studio-main"><div class="bar-ruler"><span>声部 / 钢琴卷帘</span><div>${Array.from({ length: 8 }, (_, i) => `<span>${i + 1}</span>`).join('')}</div></div>${state.parts
       .map((id, k) => {
         const ins = find(id);
@@ -65,7 +72,7 @@ window.CoStudio = (() => {
     solos = state.parts.map(() => false);
     volumes = state.parts.map((_, i) => (i === 0 ? 0.75 : 0.5));
     studioNotes = CoScore.arrange(state.melody, state.style, state.parts);
-    studioName = '晴日来信 · ' + style.name;
+    studioName = melodyLabel + ' · ' + style.name;
     studioPosition = 0;
     bpm = 108;
     transpose = 0;
@@ -312,22 +319,30 @@ window.CoStudio = (() => {
     render();
   }
   async function importMidi(file) {
-    if (!file) return;
+    if (!file) return false;
     if (file.size > 2 * 1024 * 1024) {
       toast('请选择小于 2 MB 的旋律 MIDI');
-      return;
+      return false;
     }
     try {
       await initialize();
       stop();
       state.melody = parseMidi(await file.arrayBuffer());
+      const style = styles.find((s) => s.id === state.style) || styles[1];
+      melodyLabel =
+        file.name
+          .replace(/\.midi?$/i, '')
+          .replace(/[\\/]/g, '')
+          .slice(0, 80) || '导入旋律';
       studioNotes = CoScore.arrange(state.melody, state.style, state.parts);
-      studioName = file.name.replace(/\.midi?$/i, '') + ' · 模板伴奏';
+      studioName = melodyLabel + ' · ' + style.name;
       studioPosition = 0;
       render();
       toast('已导入旋律，可继续更换乐器与风格。');
+      return true;
     } catch (e) {
       toast('无法读取：' + e.message);
+      return false;
     }
   }
   async function exportMidi() {
@@ -436,7 +451,12 @@ window.CoStudio = (() => {
     exportMidi,
     importMidi,
     preset,
-    reset: () => preset('classical'),
+    reset: async () => {
+      melodyLabel = '晴日来信';
+      state.melody = null;
+      initializing = undefined;
+      await preset('classical');
+    },
     focus: () => {
       volumes = state.parts.map((_, i) => (i === 0 ? 0.9 : 0.25));
       mixUI();

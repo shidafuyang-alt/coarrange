@@ -1,0 +1,16 @@
+{
+  "name": "coarrange-audio-midi",
+  "private": true,
+  "type": "module",
+  "description": "Browser-side hum transcription using @spotify/basic-pitch. Not a copy of htmlapps-audio-to-midi.",
+  "scripts": {
+    "test": "node test-recordings.mjs",
+    "build": "esbuild browser-entry.js --bundle --format=esm --platform=browser --target=es2020 --outfile=../web/vendor/co-pitch.js"
+  },
+  "dependencies": {
+    "@spotify/basic-pitch": "^1.0.1",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tonejs/midi": "^2.0.28",
+    "esbuild": "^0.24.2"
+  }
+}

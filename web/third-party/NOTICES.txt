@@ -1,0 +1,29 @@
+CoArrange Hum-to-Music uses these third-party projects. The page does not copy their websites.
+
+Spotify Basic Pitch, TypeScript library @spotify/basic-pitch 1.0.1
+https://github.com/spotify/basic-pitch-ts
+Copyright 2022 Spotify AB
+Apache License 2.0. The license text is in web/third-party/basic-pitch-LICENSE.
+The model weights are downloaded into web/vendor/model and are not committed. Run npm run pitch-model.
+Research: Bittner et al., "A Lightweight Instrument-Agnostic Model for Polyphonic
+Note Transcription and Multipitch Estimation", ICASSP 2022.
+https://arxiv.org/abs/2203.09893
+
+TensorFlow.js @tensorflow/tfjs 4.22.0
+https://github.com/tensorflow/tfjs
+Apache License 2.0. It runs the Basic Pitch graph in the browser.
+The license text is in web/third-party/tfjs-LICENSE.
+
+Reviewed and not embedded as an application:
+
+htmlapps-audio-to-midi
+https://github.com/ttomohisa/htmlapps-audio-to-midi
+Copyright (c) 2026 ttomohisa, MIT License.
+It is a complete single-page app around the same Basic Pitch model. CoArrange
+calls the official library instead of copying that website.
+
+Symphony
+https://github.com/ericswork/symphony
+A separate browser demo for chord suggestions. The repository has no license
+file, and its pitch tracker is Pitchy rather than Basic Pitch. It is not
+included in this project.

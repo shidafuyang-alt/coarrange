@@ -1,0 +1,10 @@
+node_modules/
+audio-midi/node_modules/
+web/vendor/model/
+.venv/
+.cache/
+.DS_Store
+artifacts/
+.env
+.env.*
+*.pem

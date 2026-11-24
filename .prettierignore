@@ -1,0 +1,6 @@
+web/vendor/co-pitch.js
+web/vendor/model/
+audio-midi/node_modules/
+package-lock.json
+web/assets/lucide.min.js
+web/assets/score.json
