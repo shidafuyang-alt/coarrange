@@ -41,7 +41,7 @@ Theme, language, sidebar preferences, and favorites are stored in the current br
 2. Open **Arrangement**, choose a style, and press **Play arrangement**.
 3. Click an instrument name to replace it, or use **Add instrument** to introduce another part.
 4. Use **S** to hear a part alone, then export the arrangement as MIDI.
-5. In the supplied-song case, switch **A / B** to compare the source excerpt with a prepared classical arrangement at the same playhead position.
+5. In the supplied-song case, switch **A / B** to compare the source excerpt with a prepared classical arrangement at the same playhead position. Press **1–6** to switch between six synchronized versions, **0** for Auto-DJ, and **P** to play or stop.
 
 ## Project structure
 
@@ -98,7 +98,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the working agreement and [docs/ARCHI
 
 **Implemented:** real prepared audio, actual local sample playback, editable arrangement templates, MIDI import/export, and the interface features listed above. Ten additional versions of the original theme and the supplied-song arrangements were genuinely generated offline using ACE-Step 1.5 Turbo. Their prompts, seeds, and checks are recorded in [docs/audio/](docs/audio/).
 
-**Not connected yet:** live music generation for arbitrary text or uploads, model APIs, multi-agent LLM critique, source separation, and transcription of the supplied song into editable stems. Text records a direction; it does not change the prepared listening audio. The workbench provides a separate editable interpretation of the original theme and does not reproduce every detail of an AI-rendered version.
+**Not connected yet:** live music generation for arbitrary text or uploads, model APIs, multi-agent LLM critique, and in-app source separation or transcription. The five melody-locked remixes were produced offline with separation, transcription, and hand-written arrangement rules; see [tools/remix/](tools/remix/README.md). Text records a direction; it does not change the prepared listening audio. The workbench provides a separate editable interpretation of the original theme and does not reproduce every detail of an AI-rendered version.
 
 MIDI import targets simple melodic Type 0/1 PPQ files. General MIDI does not define an erhu program, so the erhu part uses a fiddle mapping on export; its recorded erhu sound is available inside this application. Generative covers can change melodic details. Automated audio metrics are supporting checks, not a claim of human listening approval.
 
