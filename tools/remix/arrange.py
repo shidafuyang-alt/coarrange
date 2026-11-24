@@ -326,36 +326,111 @@ def nocturne():
     m.render(f"{OUT}/song-nocturne.wav", rt=1.7)
 
 
+def reed(hz):
+    """Synthesized suona: a bright conical reed with nasal formants and breath."""
+    n = len(hz)
+    t = np.arange(n) / SR
+    late = np.clip((t - 0.15) / 0.3, 0, 1)
+    hz = hz * 2 ** (late * 0.22 * np.sin(2 * np.pi * 5.8 * t) / 12)  # lip vibrato
+    ph = np.cumsum(hz) / SR
+    y = np.zeros(n)
+    for h in range(1, 22):
+        f = hz * h
+        body = np.exp(-((f - 1020) / 330) ** 2) * 1.9 + np.exp(-((f - 2900) / 800) ** 2) * 0.75 + np.exp(-((f - 4300) / 900) ** 2) * 0.35 + 0.22
+        y += np.sin(2 * np.pi * h * ph + 0.35 * h) * body / h**0.55 * (f < 11000)
+    breath = sosfilt(butter(2, [1800, 6500], "band", fs=SR, output="sos"), rng.normal(size=n))
+    return np.tanh((y + breath * 0.12) * 0.5) * 0.16
+
+
+def metal(kind):
+    """Wedding-band brass percussion: rising small gong, crash cymbals, big gong."""
+    parts = {"xiaoluo": ([620, 1110, 1760, 2480, 3350], 0.42, 0.10), "bo": (None, 0.5, 0), "daluo": ([190, 331, 467, 612, 887, 1290], 1.3, -0.10)}
+    fs_, tau, bend = parts[kind]
+    n = int(min(1.8, tau * 3) * SR)
+    t = np.arange(n) / SR
+    if kind == "bo":
+        y = hp(rng.normal(size=n), 3200) * env(n, 0.22) * 0.5
+        y += sum(np.sin(2 * np.pi * f * t + f) for f in (3110, 4270, 5230, 6890)) * env(n, 0.13) * 0.05
+    else:
+        y = np.zeros(n)
+        for k, f in enumerate(fs_):
+            glide = f * (1 + bend * (1 - np.exp(-t / 0.12)))
+            y += np.sin(2 * np.pi * np.cumsum(glide) / SR + k) * env(n, tau / (1 + 0.5 * k)) / (1 + 0.35 * k)
+        y = y * 0.3 + hp(rng.normal(size=n), 2500) * env(n, 0.03) * 0.2
+    y[-400:] *= np.linspace(1, 0, 400)
+    return np.stack([y, y], 1)
+
+
+def tanggu(accent=1.0):
+    n = int(0.45 * SR)
+    f = 78 + 70 * env(n, 0.035)
+    y = np.sin(2 * np.pi * np.cumsum(f) / SR) * env(n, 0.13)
+    y += sosfilt(butter(2, [250, 1400], "band", fs=SR, output="sos"), rng.normal(size=n)) * env(n, 0.022) * 0.7
+    return np.stack([y, y], 1) * accent
+
+
 def erhu():
+    """Northwest wedding band: suona lead, erhu in heterophony, drums and gongs."""
     m = Mix()
-    m.sing("erhu", 12, 1.6, send=0.26, expr=1.0)
-    k, cl, oh, ch = drum("kick"), drum("clap"), drum("open"), drum("hat")
-    for b in range(32):
-        if not 2 <= b <= 4:
-            m.put(k * 0.42, tb(b), 0, 0)
-            m.put(oh * 0.16, tb(b + 0.5), 0.2, 0.05)
-            for q in (0.25, 0.75):
-                m.put(ch * 0.10, tb(b + q), -0.25, 0.02)
-        if b % 2 == 0 and b > 4:
-            m.put(cl * 0.34, tb(b), 0.05, 0.12)
-    for q in range(4):  # fill back into the drop
-        m.put(cl * (0.14 + 0.06 * q), tb(4 + q / 4), 0.05, 0.1)
-    for i in range(8):
+    m.sing(None, 12, 1.25, send=0.2, expr=1.0, synth=reed)
+    m.sing("erhu", 12, 1.5, pan=-0.35, send=0.25, expr=1.0)
+    # From the second half the erhu doubles an octave down, for a fuller pair of leads.
+    m.sing("erhu", 0, 0.7, pan=-0.5, send=0.25, expr=0.8, t0=9.9)
+
+    def blow(p, t, d, g=0.6, pan=0.25):
+        n = int(d * SR)
+        x = np.arange(n) / SR
+        y = reed(440 * 2 ** ((p - 0.9 * np.exp(-x / 0.035) - 69) / 12))  # scoop up into the note
+        y *= np.minimum(1, x / 0.015) * np.minimum(1, (d - x) / 0.05)
+        m.put(np.stack([y, y], 1) * g, t, pan, 0.2)
+
+    # Second suona answers in D-flat pentatonic wherever the singer rests.
+    for start, seq in ((11.45, (80, 82, 80, 77, 75, 77)), (30.6, (82, 80, 77))):
+        for k, p in enumerate(seq):
+            blow(p, tb(start + k * 0.25), 0.17, 0.5)
+    # Erhu long tones a third or so below the tune thicken each chord.
+    for i in range(1, 8):
+        _, _, b = chord_at(i)
+        tones = vl(i, 62)
+        for half in (0, 2):
+            m.note("erhu", tones[0 if half == 0 else 1], tb(b + half), 2 * BEAT, 0.34, pan=-0.6, send=0.35, attack=0.09, release=0.2)
+        for k2, p in enumerate(tones[:3]):
+            m.note("strings", p - 12, tb(b), 4 * BEAT, 0.10, pan=(-0.4, 0.1, 0.5)[k2], send=0.35, attack=0.15, release=0.3)
+    # Grace-note flicks before the longest sung notes.
+    for x in NOTES:
+        if x["duration"] > 0.55 and x["time"] > 2.2:
+            blow(x["pitch"] + 14, x["time"] - 0.07, 0.07, 0.4, 0.1)
+    k, dg = drum("kick"), tanggu()
+    xl, bo, dl = metal("xiaoluo"), metal("bo"), metal("daluo")
+    m.put(dl * 0.30, tb(1), 0, 0.3)
+    # Stop-time opening: an accelerating drum roll into the procession.
+    ts = np.cumsum(np.linspace(0.42, 0.07, 14))
+    ts = 2.0 + ts / ts[-1] * 2.85
+    for j, b in enumerate(ts):
+        m.put(dg * (0.06 + 0.011 * j), tb(b), -0.1, 0.1)
+    for i in range(1, 8):
         c, r, b = chord_at(i)
+        # 咚 咚 锵 / 咚咚 咚 锵
+        for e, v in ((0, 1), (1, 0.6), (2, 0.9), (2.5, 0.5), (3, 0.6)):
+            m.put(dg * 0.19 * v, tb(b + e), -0.12, 0.08)
+        m.put(bo * 0.11, tb(b + 3), 0.3, 0.15)
+        for e in (1.5, 3.5):
+            m.put(xl * 0.07, tb(b + e), -0.45, 0.1)
+        for e in (0, 2):
+            m.put(k * 0.14, tb(b + e), 0, 0)
+        if i in (1, 4):
+            m.put(dl * 0.2, tb(b), 0.1, 0.3)
         for e in range(8):
-            if i or e < 1:
-                m.note("bass", r + (12 if e % 2 else 0) + (0 if r > 33 else 12), tb(b + e / 2), 0.24, 0.62, send=0.02, release=0.06, human=0)
+            m.note("bass", r + (12 if e % 2 else 0) + (0 if r > 33 else 12), tb(b + e / 2), 0.24, 0.5, send=0.02, release=0.06, human=0)
         up = vl(i)
-        for p in up:
-            m.note("violins", p, tb(b), 4 * BEAT, 0.07, pan=0.3, send=0.35, attack=0.1, release=0.3)
-        for e in (0.5, 1.5, 2.25, 3.5):
-            if i:
+        for e in range(8):  # plucked, banjo-like off-beats stand in for sanxian
+            if e % 2:
                 for p in up[:3]:
-                    m.note("clean", p, tb(b + e), 0.10, 0.2, pan=-0.45, send=0.08, release=0.05, human=0.003)
-        if i in (3, 7, 5):  # disco-string octave run
-            for q, p in enumerate([up[0], up[1], up[2], up[3], up[0] + 12, up[3], up[2], up[1]]):
-                m.note("violins", p + 12, tb(b + 2 + q / 4), 0.16, 0.16, pan=0.4, send=0.3, attack=0.02, release=0.08)
-    m.render(f"{OUT}/song-erhu.wav", rt=1.1, lufs=-21)
+                    m.note("banjo", p, tb(b + e / 2), 0.12, 0.12, pan=0.45, send=0.08, release=0.06, human=0.004)
+    for e in (28.5, 28.75, 29):
+        m.put(bo * 0.09, tb(e), -0.3, 0.15)
+    m.put(dl * 0.3, tb(31), 0, 0.3)
+    m.render(f"{OUT}/song-erhu.wav", rt=1.2, lufs=-21)
 
 
 def pulse(duty):

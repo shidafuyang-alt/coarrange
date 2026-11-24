@@ -1,5 +1,5 @@
 'use strict';
-// Six sample-aligned versions of one 20-second hook. Switching never moves the playhead.
+// Six sample-aligned versions, plus the early AI cover, of one 20-second hook. Switching never moves the playhead.
 window.CoRemix = (() => {
   const decks = [
     {
@@ -25,10 +25,10 @@ window.CoRemix = (() => {
     },
     {
       id: 'erhu',
-      name: '二胡迪斯科',
-      hint: '二胡也能蹦',
-      icon: 'disc-3',
-      color: '#d98a3d',
+      name: '西北喜宴',
+      hint: '唢呐、二胡与锣鼓',
+      icon: 'party-popper',
+      color: '#d93a3a',
     },
     {
       id: 'lofi',
@@ -44,7 +44,15 @@ window.CoRemix = (() => {
       icon: 'gamepad-2',
       color: '#2f9c8c',
     },
+    {
+      id: 'classical',
+      name: '早期 AI 改编',
+      hint: '对比：旋律走样',
+      icon: 'history',
+      color: '#6f6a78',
+    },
   ];
+  const remixCount = 6; // the last deck is a comparison and stays out of Auto-DJ
   let ctx,
     master,
     loading,
@@ -59,7 +67,7 @@ window.CoRemix = (() => {
   const label = (s) => CoLocale.text(s);
 
   function view() {
-    return `<div class="remix-deck" style="--deck:${decks[selected].color}"><div class="remix-head"><div><p class="eyebrow">ONE HOOK. SIX WORLDS.</p><h3>同一段副歌，随时变身。</h3></div><div class="remix-actions"><button class="btn btn-outline" data-remix="auto" aria-pressed="${auto}">${icon('shuffle')}自动 DJ</button><button class="btn btn-primary" data-remix="play">${icon(playing ? 'square' : 'play')}<span>${playing ? '停止' : '开始混音'}</span></button></div></div><canvas class="remix-canvas" height="190" aria-label="从人声提取的旋律轮廓"></canvas><div class="remix-keys">${decks.map((d, i) => `<button class="remix-key ${i === selected ? 'is-on' : ''}" data-remix-key="${i}" aria-pressed="${i === selected}" style="--key:${d.color}"><kbd>${i + 1}</kbd>${icon(d.icon)}<strong>${d.name}</strong><small>${d.hint}</small></button>`).join('')}</div><p class="helper">${icon('keyboard')}按 1–6 切换，0 开关自动 DJ，P 播放或停止。亮线是从人声提取的旋律，五个改编都演奏这条线。</p></div>`;
+    return `<div class="remix-deck" style="--deck:${decks[selected].color}"><div class="remix-head"><div><p class="eyebrow">ONE HOOK. SIX WORLDS.</p><h3>同一段副歌，随时变身。</h3></div><div class="remix-actions"><button class="btn btn-outline" data-remix="auto" aria-pressed="${auto}">${icon('shuffle')}自动 DJ</button><button class="btn btn-primary" data-remix="play">${icon(playing ? 'square' : 'play')}<span>${playing ? '停止' : '开始混音'}</span></button></div></div><canvas class="remix-canvas" height="190" aria-label="从人声提取的旋律轮廓"></canvas><div class="remix-keys">${decks.map((d, i) => `<button class="remix-key ${i === selected ? 'is-on' : ''}" data-remix-key="${i}" aria-pressed="${i === selected}" style="--key:${d.color}"><kbd>${i + 1}</kbd>${icon(d.icon)}<strong>${d.name}</strong><small>${d.hint}</small></button>`).join('')}</div><p class="helper">${icon('keyboard')}按 1–6 切换，7 听早期 AI 对比，0 开关自动 DJ，P 播放或停止。亮线是从人声提取的旋律，五个改编都演奏这条线。</p></div>`;
   }
   async function load() {
     if (!ctx) {
@@ -209,7 +217,7 @@ window.CoRemix = (() => {
       // Four-beat bars start on the second beat of the excerpt.
       const bar = Math.floor((position() - melody.firstBeat - 0.625) / 2.5);
       if (bar !== lastBar) {
-        if (lastBar !== -1) select((selected + 1) % decks.length);
+        if (lastBar !== -1) select((selected + 1) % remixCount);
         lastBar = bar;
       }
     }
@@ -236,7 +244,7 @@ window.CoRemix = (() => {
     if (e.metaKey || e.ctrlKey || e.altKey || e.repeat || document.querySelector('.modal')) return;
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
     if (!document.querySelector('.remix-deck')) return;
-    if (/^[1-6]$/.test(e.key)) {
+    if (/^[1-7]$/.test(e.key)) {
       auto = false;
       select(+e.key - 1);
       if (!playing) toggle();

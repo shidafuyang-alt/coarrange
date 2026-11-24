@@ -53,7 +53,7 @@ window.CoLocale = (() => {
     'hate that i made you love me · 早期 AI 改编': 'hate that i made you love me · Early AI cover',
     'hate that i made you love me · 室内古典': 'hate that i made you love me · Chamber',
     'hate that i made you love me · 钢琴夜曲': 'hate that i made you love me · Nocturne',
-    'hate that i made you love me · 二胡迪斯科': 'hate that i made you love me · Erhu disco',
+    'hate that i made you love me · 西北喜宴': 'hate that i made you love me · Northwest wedding',
     'hate that i made you love me · 深夜 Lo-fi': 'hate that i made you love me · Late-night lo-fi',
     'hate that i made you love me · 8-bit 冒险': 'hate that i made you love me · 8-bit adventure',
     流行原曲: 'Pop original',
@@ -70,8 +70,8 @@ window.CoLocale = (() => {
     开始混音: 'Start the mix',
     停止: 'Stop',
     从人声提取的旋律轮廓: 'Melody contour extracted from the vocal',
-    '按 1–6 切换，0 开关自动 DJ，P 播放或停止。亮线是从人声提取的旋律，五个改编都演奏这条线。':
-      'Press 1–6 to switch, 0 for Auto-DJ, P to play or stop. The line is the melody extracted from the vocal; all five remixes play it.',
+    '按 1–6 切换，7 听早期 AI 对比，0 开关自动 DJ，P 播放或停止。亮线是从人声提取的旋律，五个改编都演奏这条线。':
+      'Press 1–6 to switch, 7 for the early AI cover, 0 for Auto-DJ, P to play or stop. The line is the melody extracted from the vocal; all five remixes play it.',
     '同一旋律 · 六种声音': 'One melody · six sounds',
     '小提琴沿着人声的旋律，逐音重新演奏': 'A violin plays the vocal line, note by note',
     '对比：早期 AI 改编': 'Compare: early AI cover',
@@ -81,6 +81,10 @@ window.CoLocale = (() => {
       'The early versions came straight from a local ACE-Step model, whose melody tends to drift; they are kept for comparison. All versions are loudness-matched. The MIDI workbench uses a separate original example.',
     '提前制作的真实改编案例。上传其他歌曲的实时改编尚未开放。':
       'A real example, prepared in advance. Live rearrangement of other uploads is not available yet.',
+    西北喜宴: 'Northwest wedding',
+    '唢呐、二胡与锣鼓': 'Suona, erhu, gongs',
+    '早期 AI 改编': 'Early AI cover',
+    '对比：旋律走样': 'For comparison',
     'AI 改编试听': 'AI arrangement',
     原创编配试听: 'Original arrangement',
     '原主题 108 BPM': 'Original theme: 108 BPM',

@@ -74,9 +74,9 @@ Object.assign(tracks, {
     caseStudy: true,
   },
   'song-erhu': {
-    title: 'hate that i made you love me · 二胡迪斯科',
+    title: 'hate that i made you love me · 西北喜宴',
     subtitle: '转录旋律 · 重新编配',
-    style: 'Erhu disco / Melody-locked',
+    style: 'Northwest wedding / Melody-locked',
     cover: 'assets/cover-pop.png',
     src: 'assets/song-erhu.m4a',
     duration: '0:20',
