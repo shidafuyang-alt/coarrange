@@ -163,38 +163,42 @@ function time(t) {
   if (!Number.isFinite(t)) return '0:00';
   return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 }
+let libraryFavorites = false;
 function setView(next) {
-  if (studioPlaying) stopStudio();
-  view = next;
-  location.hash = next;
-  render();
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  const target =
+    { home: 'workspace', create: 'workspace', transform: 'workspace', favorites: 'library' }[
+      next
+    ] || next;
+  if (next === 'create' || next === 'transform')
+    MusicCraftAgent.selectMode(next === 'create' ? 'create' : 'restyle');
+  if (target === 'library') {
+    libraryFavorites = next === 'favorites';
+    const section = document.querySelector('#library');
+    if (section) {
+      section.innerHTML = libraryView();
+      icons();
+    }
+  }
+  location.hash = target;
+  document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document
+    .querySelectorAll('.nav-item[data-view]')
+    .forEach((button) =>
+      button.classList.toggle(
+        'active',
+        button.dataset.view === next || (next !== 'favorites' && button.dataset.view === target),
+      ),
+    );
 }
 function render() {
-  const titles = {
-    home: '你的音乐工作室',
-    create: '灵感创作',
-    transform: '风格转换',
-    arrange: '编曲工作台',
-    library: '我的作品库',
-    favorites: '我的收藏',
-  };
-  $('#breadcrumb').textContent = titles[view] || titles.home;
-  $$('[data-view]').forEach((b) =>
-    b.classList.toggle('active', b.dataset.view === view && b.classList.contains('nav-item')),
-  );
-  main.innerHTML = (
-    {
-      home: homeView,
-      create: createView,
-      transform: transformView,
-      arrange: arrangeView,
-      library: libraryView,
-      favorites: libraryView,
-    }[view] || homeView
-  )();
+  view = 'workspace';
+  $('#breadcrumb').textContent = 'MusicCraft 音乐工作区';
+  if (document.getElementById('workspace')) {
+    document.getElementById('arrange').innerHTML = CoStudio.view();
+    document.getElementById('library').innerHTML = libraryView();
+  } else main.innerHTML = homeView();
   icons();
-  if (view === 'arrange') paintNotes();
+  paintNotes();
   if ($('.remix-deck')) CoRemix.mount().catch(() => {});
   updatePlayer();
 }
@@ -203,29 +207,24 @@ function trackCard(key) {
   return `<div class="compare-track"><div class="cover-wrap"><img src="${t.cover}" alt="${key === 'pop' ? '银色流动雕塑' : '光影中的三角钢琴'}"><button class="cover-play" data-play="${key}" aria-label="试听${t.title}">${icon('play')}</button></div><div class="track-info"><h3>${t.title}</h3><p>${key === 'pop' ? '轻快节奏，合成器与电子鼓' : '保留旋律，换上钢琴与弦乐'}</p><div class="tag-row"><span class="tag ${key === 'pop' ? 'rose' : ''}">${key === 'pop' ? '原始编配' : '风格改编'}</span><span class="tag">${key === 'pop' ? '流行' : '室内古典'}</span><span class="tag">0:38</span></div></div></div>`;
 }
 function homeView() {
-  return `<div class="greeting"><div><p class="eyebrow">A LITTLE IDEA. A WHOLE NEW SOUND.</p><h1>今天，想听见什么灵感？</h1></div><span>你的音乐，不必从专业开始。</span></div><section class="hero"><div class="hero-copy"><p class="eyebrow">SAME TUNE. WILDLY DIFFERENT.</p><h2>熟悉的旋律，<br>听点<span>不一样。</span></h2><p>摇滚、民谣、爵士，或让二胡和迪斯科碰个面。<br>一首原创主题，十三种打开方式。</p><div class="hero-actions"><button class="btn btn-primary" data-play="erhu">${icon('play')}听二胡蹦迪</button><button class="btn btn-light" data-view="arrange">${icon('sliders-horizontal')}自己配一版</button></div></div><div class="hero-art genre-hero-art" aria-hidden="true"><div class="hero-record">${icon('audio-lines')}</div><span class="hero-instrument erhu-badge">${icon('disc-3')}ERHU × DISCO</span><span class="hero-instrument rock-badge">${icon('guitar')}A LITTLE ROCK</span><span class="hero-instrument chip-badge">${icon('gamepad-2')}8-BIT ADVENTURE</span></div></section>${themePlayground()}${songCaseStudy()}<div class="section-head"><h2>从这里，开始你的创作</h2><span>选一种方式，剩下的慢慢来。</span></div><div class="creation-grid"><button class="creation-card" data-view="create"><span class="card-icon">${icon('sparkles')}</span><h3>把想法变成音乐</h3><p>说说心情，找一个喜欢的声音。</p>${icon('chevron-right').replace('<i ', '<i class="card-chev" ')}</button><button class="creation-card" data-view="transform"><span class="card-icon rose">${icon('shuffle')}</span><h3>给音乐换种风格</h3><p>保留熟悉的旋律，听见新的可能。</p>${icon('chevron-right').replace('<i ', '<i class="card-chev" ')}</button><button class="creation-card" data-view="arrange"><span class="card-icon blue">${icon('sliders-horizontal')}</span><h3>亲手调整编曲</h3><p>让鼓轻一点，或让钢琴多一点。</p>${icon('chevron-right').replace('<i ', '<i class="card-chev" ')}</button></div>`;
-}
-function styleChoices() {
-  return musicStyleChoices();
-}
-function emptyResult() {
-  return `<div class="result-empty">${icon('audio-lines')}<h3>你的灵感，会在这里响起</h3><p>先选一个方向，预览编曲计划与示例。</p></div>`;
-}
-function createView() {
-  return `<div class="view-title"><p class="eyebrow">FROM A THOUGHT TO A MELODY</p><h1>先说说，你想听见什么。</h1><p>不用专业词汇。一种心情、一个画面，都可以是开始。</p></div><div class="workspace-grid"><section class="panel"><div class="panel-title">${icon('sparkles')}你的音乐灵感</div><label class="field-label" for="prompt">描述一个想法（可选）</label><textarea id="prompt" class="textarea" placeholder="比如：午后的阳光洒进房间，一首温柔的钢琴曲，带一点弦乐，适合安静地发呆。"></textarea><div class="suggestions">${['下班路上，轻快一点', '雨天的钢琴和弦乐', '像夏天一样的流行音乐'].map((t) => `<button class="suggestion" data-prompt="${t}">${t}</button>`).join('')}</div><span class="field-label">选择声音方向</span>${styleChoices()}<button class="btn btn-primary full" data-action="preview-plan">${icon('sparkles')}试听这个方向</button><p class="helper">${icon('info')}文字用于记录方向，试听为已准备的风格样例。</p></section><section class="panel" id="result-panel">${emptyResult()}</section></div>`;
-}
-function transformView() {
-  return `<div class="view-title"><p class="eyebrow">FAMILIAR MELODY. A DIFFERENT WORLD.</p><h1>熟悉的旋律，换一种心情。</h1><p>先比较你选的歌曲，再探索自己的音乐想法。</p></div>${songCaseStudy()}<div class="section-head"><div><h2>继续探索上传与编曲</h2><p>下方使用另一首原创示例；上传文件仅本地试听。</p></div></div><div class="workspace-grid"><section class="panel"><div class="panel-title">${icon('disc-3')}选择你的音乐</div><label class="dropzone" id="audio-drop" for="audio-upload">${icon('upload-cloud')}<strong>点击或拖入一段音频</strong><p>MP3、WAV、M4A · 最大 30 MB · 仅在浏览器本地读取</p><input class="file-input" id="audio-upload" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg"></label><div class="source-pill"><img src="assets/cover-pop.png" alt="音乐封面"><div><strong id="source-name">${customFilename ? '<span data-i18n-ignore>' + escapeHTML(customFilename) + '</span>' : '晴日来信 · 流行原版'}</strong><span id="source-desc">${customFilename ? '已上传 · 可本地试听' : '已为你准备 · 0:38 · 原创演示素材'}</span></div><button class="icon-btn" aria-label="试听源音频" data-action="play-source">${icon('play')}</button></div><span class="field-label">你想把它变成什么风格？</span>${styleChoices()}<div class="toggle-row"><span>保留主旋律 <small class="badge-small">示例已保留</small></span><span class="locked-label">${icon('lock-keyhole')} 固定示例</span></div><button class="btn btn-primary full" data-action="preview-transform">${icon('shuffle')}${customFilename ? '试听本站改编示例' : '预览流行转古典'}</button><p class="helper">${icon('info')}${customFilename ? '你上传的音频可试听；本版不改编上传文件，结果仍为「晴日来信」的预制示例。' : '示例保留同一旋律，分别编配与渲染。实时风格转换将在模型接入后提供。'}</p>${customFilename ? '<button class="text-btn" data-action="reset-source">恢复内置示例</button>' : ''}</section><section class="panel" id="result-panel">${emptyResult()}</section></div>`;
+  return `<section id="workspace" class="workspace-section"><div class="art-hero">
+    <div class="art-hero-copy"><div class="art-eyebrow"><span class="art-spark" aria-hidden="true">✳</span><span data-i18n-ignore>MUSICCRAFT — A STUDIO FOR YOUR IMAGINATION</span></div>
+    <h1 data-i18n-ignore><span>Make it</span><em>your sound.</em></h1>
+    <p class="art-intro">让每一种声音，成为你的作品。</p><p class="art-description">重塑歌曲风格，用自己的声音翻唱，或让一个灵感长成旋律。</p>
+    <div class="art-actions"><a class="btn btn-primary" href="#music-agent">进入创作 ${icon('arrow-up-right')}</a><button class="art-listen" data-view="examples">${icon('headphones')}<span>先听听灵感</span></button></div>
+    </div>
+    <div class="art-record-scene" aria-hidden="true"><span class="art-orbit orbit-one"></span><span class="art-orbit orbit-two"></span><span class="art-scene-note" data-i18n-ignore>PLAY. REIMAGINE. REPEAT.</span><div class="art-record"><div class="art-record-label"><span data-i18n-ignore>MC / SIDE A</span><span class="record-flower">✳</span><i></i><span data-i18n-ignore>ORIGINAL BY YOU</span></div></div><span class="art-record-caption" data-i18n-ignore>AN OPEN SPACE<br>FOR A NEW FREQUENCY.</span><span class="art-scene-cross">+</span></div>
+    <div class="art-hero-foot"><span data-i18n-ignore>FROM AN IDEA TO A NEW FREQUENCY</span><div><span>风格重塑</span><i></i><span>个人音色</span><i></i><span>灵感作曲</span></div></div>
+    </div>${MusicCraftConnections.panel()}${MusicCraftAgent.workspace()}</section><section id="arrange" class="workspace-section">${CoStudio.view()}</section><section id="examples" class="workspace-section"><div class="section-head"><div><h2>风格试听与对比</h2><p>本区为预制试听，播放和切换风格不调用实时模型。</p></div></div>${themePlayground()}${songCaseStudy()}</section><section id="library" class="workspace-section">${libraryView()}</section>`;
 }
 function showResult(key, kind) {
   musicStyleResult(key, kind);
 }
 function libraryView() {
-  const all =
-    view === 'favorites'
-      ? Object.keys(tracks).filter((k) => favorites.includes(k))
-      : Object.keys(tracks);
-  return `<div class="view-title"><p class="eyebrow">YOUR LITTLE COLLECTION OF SOUNDS</p><h1>${view === 'favorites' ? '喜欢的声音，留在这里。' : '每个版本，都值得听见。'}</h1><p>${view === 'favorites' ? '点击播放器或列表中的爱心，把喜欢的版本收藏起来。' : '真实改编与原创示例都在这里。播放、比较，或者带走它。'}</p></div><div class="library-toolbar"><label class="search">${icon('search')}<input id="library-search" aria-label="搜索作品" placeholder="搜索作品、风格…"></label><span class="count">${all.length} 个版本 · 保存在此浏览器</span></div><div class="track-list" id="track-list">${all.length ? all.map(trackRow).join('') : '<div class="empty-library">还没有收藏。去试听一首喜欢的音乐吧。</div>'}</div><p class="compare-note">${icon('info')}包含用户提供的歌曲片段、真实 AI 改编与原创程序编配示例。封面为 AI 图像。</p>`;
+  const all = libraryFavorites
+    ? Object.keys(tracks).filter((k) => favorites.includes(k))
+    : Object.keys(tracks);
+  return `<div class="view-title"><p class="eyebrow">YOUR LITTLE COLLECTION OF SOUNDS</p><h1>${libraryFavorites ? '喜欢的声音，留在这里。' : '每个版本，都值得听见。'}</h1><p>${libraryFavorites ? '点击播放器或列表中的爱心，把喜欢的版本收藏起来。' : '真实改编与原创示例都在这里。播放、比较，或者带走它。'}</p></div><div class="library-toolbar"><label class="search">${icon('search')}<input id="library-search" aria-label="搜索作品" placeholder="搜索作品、风格…"></label><span class="count">${all.length} 个版本 · 保存在此浏览器</span></div><div class="track-list" id="track-list">${all.length ? all.map(trackRow).join('') : '<div class="empty-library">还没有收藏。去试听一首喜欢的音乐吧。</div>'}</div><p class="compare-note">${icon('info')}包含用户提供的歌曲片段、真实 AI 改编与原创程序编配示例。封面为 AI 图像。</p>`;
 }
 function trackRow(key) {
   const t = tracks[key];
@@ -244,7 +243,11 @@ async function paintNotes() {
 function updatePlayer() {
   const t =
     current === 'source'
-      ? { ...tracks.pop, title: customFilename, subtitle: '上传文件 · 仅本地试听' }
+      ? {
+          ...tracks.pop,
+          title: customFilename,
+          subtitle: '上传文件 · 仅本地试听',
+        }
       : tracks[current] || tracks.pop;
   $('#player-cover').src = t.cover;
   $('#player-title').toggleAttribute('data-i18n-ignore', current === 'source');
@@ -305,7 +308,11 @@ function saveFavorite(key) {
   try {
     localStorage.setItem('coarrange-favorites', JSON.stringify(favorites));
   } catch {}
-  if (view === 'favorites' || view === 'library') render();
+  const library = document.getElementById('library');
+  if (library) {
+    library.innerHTML = libraryView();
+    icons();
+  }
   updatePlayer();
   toast(favorites.includes(key) ? '已加入收藏' : '已取消收藏');
 }
@@ -336,7 +343,7 @@ function showModal(type) {
       .join('')}`;
   } else {
     title = '从喜欢的声音开始';
-    body = `<p>CoArrange 是一个面向音乐初学者的创作工作台。先试听，再选择一种方式开始。</p><div class="help-step">${icon('sparkles')}<div><strong>灵感创作</strong><p>用日常语言描述想法，查看编曲计划和对应的固定试听样例。</p></div></div><div class="help-step">${icon('shuffle')}<div><strong>风格转换</strong><p>比较流行与古典编配；上传文件可本地试听，尚不支持实时改编。</p></div></div><div class="help-step">${icon('sliders-horizontal')}<div><strong>编曲工作台</strong><p>真实调整声部音量、速度与移调，导入旋律 MIDI，再导出你的编曲。</p></div></div><p style="margin-top:16px">新增歌曲案例由本地 ACE-Step 模型预先生成。其他试听为原创程序编配示例。网站尚未接入实时生成或 LLM API。</p>`;
+    body = `<p>MusicCraft 将音乐创作、风格改编、个人音色翻唱与 MIDI 编曲放在同一工作区。</p><p>DeepSeek 在后台理解创意；Mureka 负责音乐创作和风格改编，Seed-VC 负责个人换声。</p><p>上传原歌曲和自己的清晰歌声参考，点击开始换声即可完成分离、转换与混音。</p><p>预制示例可直接试听；真实生成与换声需要相应模型服务。</p>`;
   }
   $('#modal-root').innerHTML =
     `<div class="modal-overlay"><section class="modal" role="dialog" aria-modal="true" aria-label="${title}"><div class="modal-head"><h2>${title}</h2><button class="icon-btn" data-action="close-modal" aria-label="关闭">${icon('x')}</button></div>${body}<button class="btn btn-primary" data-action="close-modal">${type === 'compare' ? '继续听音乐' : '知道了，开始探索'}</button></section></div>`;
@@ -774,7 +781,7 @@ document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
     e.preventDefault();
     setView('create');
-    $('#prompt')?.focus();
+    document.querySelector('[data-agent-field="instruction"]')?.focus();
   }
   if (
     e.code === 'Space' &&
@@ -782,7 +789,7 @@ document.addEventListener('keydown', (e) => {
     !$('.modal')
   ) {
     e.preventDefault();
-    if (view === 'arrange') $('#studio-play')?.click();
+    if (location.hash === '#arrange') $('#studio-play')?.click();
     else $('#main-play').click();
   }
   if (e.key === 'Tab' && $('.modal')) {
@@ -809,13 +816,14 @@ audio.addEventListener('pause', updatePlayer);
 audio.addEventListener('ended', updatePlayer);
 audio.addEventListener('error', () => toast('这个音频无法播放，请尝试其他格式或内置样例。'));
 window.addEventListener('hashchange', () => {
-  const next = location.hash.slice(1) || 'home';
-  if (next !== view) {
-    if (studioPlaying) stopStudio();
-    view = next;
-    render();
-  }
+  const next = location.hash.slice(1) || 'workspace';
+  const target =
+    { home: 'workspace', create: 'workspace', transform: 'workspace', favorites: 'library' }[
+      next
+    ] || next;
+  document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
-view = location.hash.slice(1) || 'home';
+const initialSection = location.hash.slice(1) || 'workspace';
 render();
+if (initialSection !== 'workspace') setView(initialSection);
 ensureScore().catch(() => {});

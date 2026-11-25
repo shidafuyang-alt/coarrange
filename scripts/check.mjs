@@ -14,6 +14,12 @@ for (const name of files) {
   });
   assert.equal(result.status, 0, result.stderr);
 }
+for (const name of (await readdir(join(root, 'server'))).filter((name) => name.endsWith('.mjs'))) {
+  const result = spawnSync(process.execPath, ['--check', join(root, 'server', name)], {
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+}
 
 const sandbox = { window: {} };
 vm.runInNewContext(await readFile(join(web, 'music-catalog.js'), 'utf8'), sandbox);

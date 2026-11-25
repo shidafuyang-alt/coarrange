@@ -2,7 +2,7 @@
 
 ## Runtime
 
-CoArrange is a static browser application. `web/index.html` loads classic scripts in an explicit order. Catalogs and helper modules are loaded before `app.js`; their functions access application state only after initialization. There is no bundler or backend.
+The original CoArrange demo remains a static browser application. `web/index.html` loads classic scripts in an explicit order. Catalogs and helper modules are loaded before `app.js`; their functions access application state only after initialization. There is no bundler. The Node server now additionally hosts `/api/` for the MusicCraft Agent and real music model path.
 
 `app.js` manages hash-based navigation and the shared HTML audio player. View functions render into `#main`, and delegated event listeners handle controls created during rendering. `i18n.js` preserves original UI copy while applying translations; uploaded filenames and user-authored text should remain untranslated.
 
@@ -19,9 +19,13 @@ The supplied-song case has prepared audio only. Its score has not been transcrib
 
 `music-catalog.js` defines styles and instruments. `web/assets/score.json` contains the original editable score. Instrument samples are fetched and decoded on demand, then cached in memory. Local storage holds interface preferences and favorites. User uploads use local file/blob APIs.
 
-## Future model integration
+## Live model integration
 
-Live generation should use a backend that owns provider credentials, validates requests, tracks jobs, and returns generated assets. Do not place secret API keys in frontend JavaScript or a standalone HTML file. Keep the prepared demo available while adding live generation as a separate, accurately labeled path.
+`web/agent-ui.js` provides uploads, model selection and job playback. One Generate action privately plans and submits the task; clarification pauses execution when required. `server/agent.mjs` loads versioned Planner/Critic prompts, while `server/planners.mjs` adapts DeepSeek and OpenAI APIs. `server/api.mjs` binds server-owned assets to validated plans, persists records, queues execution and serves audio. Public plans omit internal model prompts and lyrics.
+
+`server/engines.mjs` dispatches to fal, Mureka, self-hosted ACE-Step or the private singing Worker. `server/voice.mjs` submits multipart audio, polls job status and downloads validated same-service stem URLs. The GPU Worker runs Demucs separation, F0-conditioned Seed-VC conversion and stereo FFmpeg mixing. Independent Python environments and pinned model caches are prepared by `deploy/`.
+
+Credentials are read from server-side `.env` by `server/config.mjs`. In managed mode, visitors cannot change shared connections or access keys. The private Worker uses a separate scoped token and can be reached through SSH forwarding. Static-only deployments retain prepared examples but cannot execute `/api/` tasks. See [managed setup](MANAGED_MODELS.md) and [verified voice deployment](VOICE_AND_MODELS.md).
 
 ## Packaging
 

@@ -1,7 +1,12 @@
 'use strict';
 (() => {
   const themes = [
-    { id: 'mist', name: '柔雾', description: '紫灰与粉灰，柔和的默认配色', icon: 'cloud' },
+    {
+      id: 'mist',
+      name: '墨绿',
+      description: '深墨绿、奶油白与酸橙色，独立音乐工作室',
+      icon: 'disc-3',
+    },
     { id: 'mono', name: '黑白', description: '纯粹中性色，把注意力留给声音', icon: 'contrast' },
     { id: 'summer', name: '夏日', description: '鼠尾草绿与浅杏色，清新明亮', icon: 'sun' },
     { id: 'midnight', name: '深夜', description: '深色面板与柔紫点缀，适合夜间使用', icon: 'moon' },
@@ -43,6 +48,8 @@
     toggle.title = toggle.getAttribute('aria-label');
     for (const button of document.querySelectorAll('.sidebar .nav-item,.sidebar .new-project')) {
       const labels = {
+        workspace: '创作与改编',
+        examples: '风格试听与对比',
         home: '为你推荐',
         create: '灵感创作',
         transform: '风格转换',

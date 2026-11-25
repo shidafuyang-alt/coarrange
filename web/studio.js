@@ -52,7 +52,7 @@ window.CoStudio = (() => {
       .join(
         '',
       )}<div class="tip-box"><strong>一个小提示</strong><p>点击乐器名称就能替换音色。先按 S 单独听，再把其他乐器加回来。</p></div><button class="text-btn" data-action="soften">${icon('feather')}整体柔和一点</button></section></aside></div>
-    <p class="studio-info">工作台可实时更换乐器、增删声部与导出 MIDI。这里是原创主题的可编辑配器；AI 试听版本与工作台演奏会有差别。</p>`;
+    <p class="helper model-usage-note">本区为本地 MIDI 与采样乐器编曲，不调用大模型。</p><p class="studio-info">工作台可实时更换乐器、增删声部与导出 MIDI。这里是原创主题的可编辑配器；AI 试听版本与工作台演奏会有差别。</p>`;
   }
   async function preset(id) {
     await initialize();
@@ -390,7 +390,7 @@ window.CoStudio = (() => {
         ...chunks,
       ]),
       url = URL.createObjectURL(new Blob([bytes], { type: 'audio/midi' }));
-    download(url, 'CoArrange-' + state.style + '.mid');
+    download(url, 'MusicCraft-' + state.style + '.mid');
     setTimeout(() => URL.revokeObjectURL(url), 2000);
     toast('已导出当前乐器、音符与速度。');
   }

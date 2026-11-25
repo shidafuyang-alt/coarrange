@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.musiccraft-data/
+voice-data/
+modelsrc/
+.venvs/
+.cache/
+logs/
+artifacts/
+__pycache__/
+.DS_Store

@@ -1,0 +1,11 @@
+node_modules/
+.musiccraft-data/
+artifacts/
+voice-data/
+modelsrc/
+.venvs/
+.env
+.env.*
+web/assets/lucide.min.js
+web/assets/score.json
+legacy/
