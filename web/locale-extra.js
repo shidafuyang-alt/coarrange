@@ -1,5 +1,38 @@
 'use strict';
 window.MusicCraftMessages = {
+  '翻唱、改编和创作完成后自动入库，随时试听、收藏或下载。':
+    'Completed covers, remixes and new music are saved automatically. Listen, favorite or download anytime.',
+  全部作品: 'All tracks',
+  我的作品: 'My tracks',
+  我的翻唱: 'My covers',
+  我的改编: 'My remixes',
+  我的创作: 'My creations',
+  预制示例: 'Prepared examples',
+  回收站: 'Trash',
+  查看: 'Show',
+  作品分类: 'Track category',
+  刷新作品库: 'Refresh library',
+  个版本: 'versions',
+  个我的作品: 'of my tracks',
+  '回收站是空的。': 'Trash is empty.',
+  '这里还没有作品，生成完成后会自动出现在这里。':
+    'No tracks here yet. Completed music will appear automatically.',
+  '我的作品保存在本机项目中；收藏和预制示例的隐藏状态保存在此浏览器。删除的作品可在回收站恢复。':
+    'My tracks are saved in this local project. Favorites and hidden examples are saved in this browser. Deleted tracks can be restored from Trash.',
+  移入回收站: 'Move to Trash',
+  恢复: 'Restore',
+  已恢复到作品库: 'Restored to the library',
+  '已移入回收站，可随时恢复': 'Moved to Trash. You can restore it anytime.',
+  查看作品库: 'View in library',
+  '成功结果会自动保存到作品库。': 'Completed results are saved to the library automatically.',
+  音乐创作: 'Music creation',
+  我的音乐作品: 'My music',
+  '我的作品需要通过应用后台读取，预制示例仍可试听。':
+    'My tracks need the app backend. Prepared examples are still available.',
+  '作品库暂时无法连接，请稍后重试。': 'The library is temporarily unavailable. Please retry.',
+  '作品不存在，请刷新作品库。': 'Track not found. Refresh the library.',
+  '作品库返回的数据无效。': 'The library returned invalid data.',
+
   '创作助手待管理员开通：DeepSeek。':
     'The creative assistant is awaiting project activation of DeepSeek.',
   '国产音乐模型：歌曲与纯音乐创作、上传音乐后改编风格。':

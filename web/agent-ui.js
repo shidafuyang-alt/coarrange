@@ -272,7 +272,7 @@ window.MusicCraftAgent = (() => {
       if (['failed', 'cancelled', 'interrupted'].includes(job.status))
         html += `<button class="btn btn-outline" data-agent-action="run" ${s.busy || !currentEngineReady(mode) ? 'disabled' : ''}>重新提交此计划</button>`;
       if (job.status === 'succeeded')
-        html += `<p class="badge-small">真实模型输出 · ${esc(job.model)}</p><audio controls preload="metadata" src="${job.audioUrl}" aria-label="真实模型生成结果"></audio><a class="btn btn-outline" href="${job.audioUrl}" download="MusicCraft-${job.id}.${job.extension}">下载音频</a><label class="field-label">试听反馈<textarea class="textarea" data-agent-feedback placeholder="例如：吉他效果不错，但鼓太响，下一版希望降低鼓的存在感。">${esc(s.feedback || '')}</textarea></label><button class="btn btn-outline" data-agent-action="review" ${s.busy ? 'disabled' : ''}>请 Agent 整理反馈</button><p class="helper">上方输入修改要求，可沿用源素材继续生成新版本。</p>`;
+        html += `<p class="badge-small">真实模型输出 · ${esc(job.model)}</p><audio controls preload="metadata" src="${job.audioUrl}" aria-label="真实模型生成结果"></audio><a class="btn btn-outline" href="${job.audioUrl}" download="MusicCraft-${job.id}.${job.extension}">下载音频</a><button class="btn btn-outline" data-view="library">查看作品库</button><p class="helper">成功结果会自动保存到作品库。</p><label class="field-label">试听反馈<textarea class="textarea" data-agent-feedback placeholder="例如：吉他效果不错，但鼓太响，下一版希望降低鼓的存在感。">${esc(s.feedback || '')}</textarea></label><button class="btn btn-outline" data-agent-action="review" ${s.busy ? 'disabled' : ''}>请 Agent 整理反馈</button><p class="helper">上方输入修改要求，可沿用源素材继续生成新版本。</p>`;
     }
     if (s.review)
       html += `<div class="agent-review"><h3>试听反馈建议</h3><p class="helper" data-i18n-ignore>${esc(s.review.plannerName || '')} · ${esc(s.review.plannerModel || '')}</p><p>${esc(s.review.summary)}</p><p>${esc(s.review.suggested_revision)}</p><p class="helper">${esc(s.review.evidenceBoundary)}</p><button class="btn btn-outline" data-agent-action="use-review">按此建议生成新版本</button></div>`;
@@ -331,6 +331,7 @@ window.MusicCraftAgent = (() => {
   async function startGeneration(mode) {
     const s = states[mode];
     s.job = await api('jobs', { planId: s.plan.id });
+    if (s.job.status === 'succeeded') window.MusicCraftLibrary?.load();
     const token = ++s.token;
     poll(mode, token).catch((error) => {
       s.error = '状态查询中断：' + error.message;
@@ -345,6 +346,7 @@ window.MusicCraftAgent = (() => {
       const result = await api(`jobs/${s.job.id}`);
       if (s.token !== token) return;
       s.job = result;
+      if (result.status === 'succeeded') window.MusicCraftLibrary?.load();
       refresh(mode);
     }
   }

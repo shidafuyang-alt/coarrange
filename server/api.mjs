@@ -75,6 +75,21 @@ export async function createAPI(config) {
     ...job,
     audioUrl: job.output ? `/api/jobs/${job.id}/audio` : null,
   });
+  const libraryItem = (job) => {
+    const plan = records.get(job.planId);
+    return {
+      id: job.id,
+      title: String(plan?.brief?.summary || '我的音乐作品').slice(0, 120),
+      mode: plan?.mode || 'create',
+      duration: plan?.brief?.duration || 0,
+      model: job.model || '',
+      createdAt: job.finishedAt || job.createdAt,
+      deletedAt: job.libraryDeletedAt || null,
+      audioUrl: `/api/jobs/${job.id}/audio`,
+      extension: job.extension,
+    };
+  };
+  const libraryReady = (job) => job.kind === 'job' && job.status === 'succeeded' && job.output;
   async function pump() {
     if (running) return;
     running = true;
@@ -203,6 +218,23 @@ export async function createAPI(config) {
           voiceModel: 'Seed-VC',
           supportedTasks: ['text2music', 'cover', 'voice_cover'],
         });
+      } else if (path === '/api/library' && req.method === 'GET') {
+        const items = [...records.values()]
+          .filter(libraryReady)
+          .map(libraryItem)
+          .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+        send(res, 200, { items });
+      } else if (/^\/api\/library\/[a-f0-9-]{36}(\/restore)?$/.test(path)) {
+        const [, , , id, action] = path.split('/');
+        const job = get(id, 'job');
+        if (!libraryReady(job)) throw new ApiError(409, '只能管理已完成的音乐作品');
+        if (!action && req.method === 'DELETE') {
+          job.libraryDeletedAt ||= new Date().toISOString();
+        } else if (action === 'restore' && req.method === 'POST') {
+          delete job.libraryDeletedAt;
+        } else throw new ApiError(405, '不支持此操作');
+        await save(job);
+        send(res, 200, libraryItem(job));
       } else if (path === '/api/engines' && req.method === 'GET') {
         send(res, 200, {
           engines: engineCatalog(config),

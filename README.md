@@ -27,6 +27,8 @@ The Python/static option supports the prepared demo only. The project operator c
 
 ## Demo features
 
+- **Saved music library:** completed covers, remixes and creations appear automatically, including existing successful jobs. Filter, play, download or favorite tracks; move unwanted results to recoverable Trash. See [library persistence and deletion](docs/LIBRARY.md).
+
 - **13 listening styles:** pop, chamber classical, gentle chamber, rock, folk, jazz swing, bossa nova, funk, reggae, lo-fi hip-hop, erhu disco, circus swing, and chiptune.
 - **31 instrument sounds:** keyboards, guitars, basses, strings, winds, brass, plucked instruments, sampled erhu, and synthesized drums.
 - **Arrangement workbench:** style presets, up to eight parts, instrument audition and replacement, add/remove parts, mute, solo, volume, tempo, and transposition.

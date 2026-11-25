@@ -173,6 +173,7 @@ function setView(next) {
     MusicCraftAgent.selectMode(next === 'create' ? 'create' : 'restyle');
   if (target === 'library') {
     libraryFavorites = next === 'favorites';
+    libraryFilter = 'all';
     const section = document.querySelector('#library');
     if (section) {
       section.innerHTML = libraryView();
@@ -220,16 +221,72 @@ function homeView() {
 function showResult(key, kind) {
   musicStyleResult(key, kind);
 }
+let libraryFilter = 'all',
+  libraryQuery = '';
+const libraryHTML = (value) =>
+  String(value ?? '').replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+  );
+const libraryDeleted = (key) =>
+  tracks[key]?.generated ? tracks[key].deleted : MusicCraftLibrary.hidden(key);
 function libraryView() {
-  const all = libraryFavorites
-    ? Object.keys(tracks).filter((k) => favorites.includes(k))
-    : Object.keys(tracks);
-  return `<div class="view-title"><p class="eyebrow">YOUR LITTLE COLLECTION OF SOUNDS</p><h1>${libraryFavorites ? '喜欢的声音，留在这里。' : '每个版本，都值得听见。'}</h1><p>${libraryFavorites ? '点击播放器或列表中的爱心，把喜欢的版本收藏起来。' : '真实改编与原创示例都在这里。播放、比较，或者带走它。'}</p></div><div class="library-toolbar"><label class="search">${icon('search')}<input id="library-search" aria-label="搜索作品" placeholder="搜索作品、风格…"></label><span class="count">${all.length} 个版本 · 保存在此浏览器</span></div><div class="track-list" id="track-list">${all.length ? all.map(trackRow).join('') : '<div class="empty-library">还没有收藏。去试听一首喜欢的音乐吧。</div>'}</div><p class="compare-note">${icon('info')}包含用户提供的歌曲片段、真实 AI 改编与原创程序编配示例。封面为 AI 图像。</p>`;
+  const all = Object.keys(tracks)
+    .filter((key) => {
+      const track = tracks[key];
+      if (libraryFilter === 'trash') return libraryDeleted(key);
+      if (libraryDeleted(key) || (libraryFavorites && !favorites.includes(key))) return false;
+      if (libraryFilter === 'mine') return track.generated;
+      if (libraryFilter === 'demo') return !track.generated;
+      return libraryFilter === 'all' || track.mode === libraryFilter;
+    })
+    .sort((a, b) => Number(Boolean(tracks[b].generated)) - Number(Boolean(tracks[a].generated)));
+  const filters = [
+    ['all', '全部作品'],
+    ['mine', '我的作品'],
+    ['voice', '我的翻唱'],
+    ['restyle', '我的改编'],
+    ['create', '我的创作'],
+    ['demo', '预制示例'],
+    ['trash', '回收站'],
+  ];
+  const mine = Object.values(tracks).filter((track) => track.generated && !track.deleted).length;
+  return `<div class="view-title"><p class="eyebrow">YOUR LITTLE COLLECTION OF SOUNDS</p><h1>${libraryFavorites ? '喜欢的声音，留在这里。' : '每个版本，都值得听见。'}</h1><p>${libraryFavorites ? '点击播放器或列表中的爱心，把喜欢的版本收藏起来。' : '翻唱、改编和创作完成后自动入库，随时试听、收藏或下载。'}</p></div>
+    <div class="library-toolbar"><label class="search">${icon('search')}<input id="library-search" aria-label="搜索作品" placeholder="搜索作品、风格…" value="${libraryHTML(libraryQuery)}"></label><label class="library-filter"><span>查看</span><select id="library-filter" aria-label="作品分类">${filters.map(([id, label]) => `<option value="${id}" ${id === libraryFilter ? 'selected' : ''}>${label}</option>`).join('')}</select></label><button class="icon-btn" data-library-refresh aria-label="刷新作品库">${icon('refresh-cw')}</button><span class="count"><span>${all.length}</span> <span>个版本</span> · <span>${mine}</span> <span>个我的作品</span></span></div>
+    ${MusicCraftLibrary.error ? `<p class="library-note" role="status">${libraryHTML(MusicCraftLibrary.error)}</p>` : ''}
+    <div class="track-list" id="track-list">${all.length ? all.map(trackRow).join('') : `<div class="empty-library">${libraryFilter === 'trash' ? '回收站是空的。' : libraryFavorites ? '还没有收藏。去试听一首喜欢的音乐吧。' : '这里还没有作品，生成完成后会自动出现在这里。'}</div>`}</div><p class="compare-note">${icon('info')}<span>我的作品保存在本机项目中；收藏和预制示例的隐藏状态保存在此浏览器。删除的作品可在回收站恢复。</span></p>`;
 }
 function trackRow(key) {
-  const t = tracks[key];
-  return `<div class="track-row" data-search="${t.title.toLowerCase()} ${t.style.toLowerCase()}"><img src="${t.cover}" alt="${t.title}封面"><div><h3>${t.title}</h3><p>${t.subtitle}</p></div><span>${t.style}</span><span>${t.duration || '0:38'}</span><button class="icon-btn" data-play="${key}" aria-label="播放${t.title}">${icon('play')}</button><button class="icon-btn favorite-btn ${favorites.includes(key) ? 'is-active' : ''}" data-fav="${key}" aria-label="${favorites.includes(key) ? '取消收藏' : '收藏'}${t.title}">${icon('heart')}</button></div>`;
+  const t = tracks[key],
+    title = libraryHTML(t.title),
+    deleted = libraryDeleted(key);
+  return `<div class="track-row${t.generated ? ' track-generated' : ''}" data-search="${libraryHTML((t.title + ' ' + t.style).toLowerCase())}"><img src="${t.cover}" alt=""><div><h3 ${t.generated ? 'data-i18n-ignore' : ''}>${title}</h3><p ${t.generated ? 'data-i18n-ignore' : ''}>${libraryHTML(t.subtitle)}</p></div><span>${libraryHTML(t.style)}</span><span>${libraryHTML(t.duration || '0:38')}</span><div class="track-actions">${deleted ? `<button class="btn btn-outline" data-library-restore="${key}">恢复</button>` : `<button class="icon-btn" data-play="${key}" aria-label="播放" title="${title}">${icon('play')}</button><button class="icon-btn favorite-btn ${favorites.includes(key) ? 'is-active' : ''}" data-fav="${key}" aria-label="${favorites.includes(key) ? '取消收藏' : '收藏'}" title="${title}">${icon('heart')}</button><a class="icon-btn" href="${t.src}" download="MusicCraft-${key}" aria-label="下载音频" title="${title}">${icon('download')}</a><button class="icon-btn" data-library-delete="${key}" aria-label="移入回收站" title="${title}">${icon('trash-2')}</button>`}</div></div>`;
 }
+function refreshLibraryView() {
+  const section = document.getElementById('library');
+  if (!section) return;
+  const focused = document.activeElement?.id === 'library-search';
+  section.innerHTML = libraryView();
+  icons();
+  applyLibrarySearch();
+  if (focused) section.querySelector('#library-search')?.focus();
+}
+function applyLibrarySearch() {
+  const query = libraryQuery.toLowerCase();
+  document.querySelectorAll('#track-list .track-row').forEach((row) => {
+    row.hidden = !(row.dataset.search + ' ' + row.textContent.toLowerCase()).includes(query);
+  });
+}
+window.addEventListener('musiccraft-library-changed', () => {
+  for (const [key, track] of MusicCraftLibrary.tracks()) tracks[key] = track;
+  if (libraryDeleted(current)) {
+    audio.pause();
+    current = Object.keys(tracks).find((key) => !libraryDeleted(key)) || 'pop';
+    audio.src = tracks[current].src;
+    updatePlayer();
+  }
+  refreshLibraryView();
+});
 function arrangeView() {
   return CoStudio.view();
 }
@@ -250,7 +307,10 @@ function updatePlayer() {
         }
       : tracks[current] || tracks.pop;
   $('#player-cover').src = t.cover;
-  $('#player-title').toggleAttribute('data-i18n-ignore', current === 'source');
+  $('#player-title').toggleAttribute(
+    'data-i18n-ignore',
+    current === 'source' || Boolean(t.generated),
+  );
   $('#player-title').textContent = t.title;
   $('#player-subtitle').textContent = t.subtitle;
   $('#main-play').innerHTML = icon(audio.paused ? 'play' : 'pause');
@@ -261,11 +321,13 @@ function updatePlayer() {
   $('#audio-label').textContent =
     current === 'source'
       ? '本地上传音频'
-      : tracks[current]?.caseStudy
-        ? '真实歌曲改编案例'
-        : tracks[current]?.theme
-          ? '原创主题 · AI 改编'
-          : '原创编配示例';
+      : tracks[current]?.generated
+        ? '我的音乐作品'
+        : tracks[current]?.caseStudy
+          ? '真实歌曲改编案例'
+          : tracks[current]?.theme
+            ? '原创主题 · AI 改编'
+            : '原创编配示例';
   updateSongCase();
   icons();
 }
@@ -560,6 +622,28 @@ document.addEventListener('click', async (e) => {
     setView(b.dataset.view);
     return;
   }
+  if (b.hasAttribute('data-library-refresh')) {
+    b.disabled = true;
+    await MusicCraftLibrary.load();
+    return;
+  }
+  if (b.dataset.libraryDelete || b.dataset.libraryRestore) {
+    const restore = Boolean(b.dataset.libraryRestore);
+    const key = b.dataset.libraryRestore || b.dataset.libraryDelete;
+    b.disabled = true;
+    try {
+      await MusicCraftLibrary.change(key, restore);
+      if (!restore)
+        document.querySelectorAll('[data-agent-output] audio').forEach((player) => {
+          if (player.getAttribute('src') === tracks[key]?.src) player.pause();
+        });
+      toast(restore ? '已恢复到作品库' : '已移入回收站，可随时恢复');
+    } catch (error) {
+      b.disabled = false;
+      toast(error.message);
+    }
+    return;
+  }
   if (b.dataset.play) {
     playTrack(b.dataset.play);
     return;
@@ -724,10 +808,8 @@ document.addEventListener('click', async (e) => {
 });
 document.addEventListener('input', (e) => {
   if (e.target.id === 'library-search') {
-    const q = e.target.value.toLowerCase();
-    $$('.track-row').forEach(
-      (r) => (r.hidden = !(r.dataset.search + ' ' + r.textContent.toLowerCase()).includes(q)),
-    );
+    libraryQuery = e.target.value;
+    applyLibrarySearch();
   }
   if (e.target.dataset.mix !== undefined) {
     volumes[+e.target.dataset.mix] = +e.target.value;
@@ -827,3 +909,12 @@ const initialSection = location.hash.slice(1) || 'workspace';
 render();
 if (initialSection !== 'workspace') setView(initialSection);
 ensureScore().catch(() => {});
+
+document.addEventListener('change', (event) => {
+  if (event.target.id === 'library-filter') {
+    libraryFilter = event.target.value;
+    refreshLibraryView();
+  }
+});
+MusicCraftLibrary.load();
+window.addEventListener('focus', () => MusicCraftLibrary.load());

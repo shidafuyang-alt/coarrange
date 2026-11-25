@@ -20,7 +20,13 @@ async function frontend(t, status = 'ready') {
       return [];
     },
   };
+  let libraryReloads = 0;
   const scope = {
+    MusicCraftLibrary: {
+      load() {
+        libraryReloads++;
+      },
+    },
     setTimeout: (callback) => setTimeout(callback, 1),
     sessionStorage: {
       getItem: (key) => saved.get(key) || null,
@@ -105,7 +111,15 @@ async function frontend(t, status = 'ready') {
   };
   await listeners.click[0](click);
   await new Promise((done) => setTimeout(done, 10));
-  return { calls, nodes, html: scope.MusicCraftAgent.workspace(), saved, scope, listeners };
+  return {
+    calls,
+    nodes,
+    html: scope.MusicCraftAgent.workspace(),
+    saved,
+    scope,
+    listeners,
+    libraryReloads,
+  };
 }
 
 test('one Generate click privately plans then queues music, without a Prompt confirmation UI', async (t) => {
@@ -115,6 +129,7 @@ test('one Generate click privately plans then queues music, without a Prompt con
     ['/api/status', '/api/plans', '/api/jobs', '/api/jobs/fixture-job'],
   );
   assert.equal(h.calls[2].body.planId, 'fixture-plan');
+  assert.equal(h.libraryReloads, 1);
   assert.match(h.nodes.get('[data-agent-output]').innerHTML, /<audio/);
   assert.doesNotMatch(h.html, /generated-prompt|copy-prompt|生成 Prompt|确认 Prompt|提示词版本/);
 });
