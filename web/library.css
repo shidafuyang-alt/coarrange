@@ -67,3 +67,14 @@
     width: 100%;
   }
 }
+
+#library-title {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+}

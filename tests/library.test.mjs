@@ -77,6 +77,10 @@ test('existing music is backfilled, private prompts omitted, trash/restoration p
   );
   assert.doesNotMatch(JSON.stringify(initial), /PRIVATE_|planId|\.wav/);
   assert.ok(initial.items.every((item) => !item.deletedAt));
+  assert.deepEqual(
+    new Set(initial.items.map((item) => item.title)),
+    new Set(['翻唱歌曲1', '改编歌曲1', '原创歌曲1']),
+  );
   assert.equal((await fetch(base + '/' + ids[0], { method: 'DELETE' })).status, 403);
   assert.equal(
     (
@@ -87,19 +91,48 @@ test('existing music is backfilled, private prompts omitted, trash/restoration p
     ).status,
     403,
   );
-  const mutate = (path, method) =>
-    fetch(base + path, { method, headers: { 'X-MusicCraft-Client': 'web' } });
+  const mutate = (path, method, body) =>
+    fetch(base + path, {
+      method,
+      headers: { 'X-MusicCraft-Client': 'web', 'Content-Type': 'application/json' },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+  for (const title of [null, 'x'.repeat(81), 'line\nbreak'])
+    assert.equal((await mutate('/' + ids[0], 'PATCH', { title })).status, 400);
+  assert.equal((await mutate('/' + ids[0], 'PATCH', { title: '  我的夜曲  ' })).status, 200);
+  assert.equal((await list()).items.find((item) => item.id === ids[0]).title, '我的夜曲');
   assert.equal((await mutate('/' + failedId, 'DELETE')).status, 409);
   assert.equal((await mutate('/' + ids[0], 'DELETE')).status, 200);
   assert.equal((await mutate('/' + ids[0], 'DELETE')).status, 200);
   assert.equal(await readFile(join(directory, ids[0] + '.wav'), 'utf8'), 'preserved audio');
+  const nextId = randomUUID();
+  const previous = JSON.parse(await readFile(join(directory, ids[0] + '.json'), 'utf8'));
+  await writeFile(
+    join(directory, nextId + '.json'),
+    JSON.stringify({
+      ...previous,
+      id: nextId,
+      libraryNumber: undefined,
+      libraryTitle: '',
+      libraryDeletedAt: undefined,
+      createdAt: '2026-11-27',
+    }),
+  );
   api.close();
   api = await createAPI(config);
-  assert.ok((await list()).items.find((item) => item.id === ids[0]).deletedAt);
+  const reopened = await list();
+  assert.equal(reopened.items.find((item) => item.id === ids[0]).title, '我的夜曲');
+  assert.equal(reopened.items.find((item) => item.id === ids[0]).defaultTitle, '翻唱歌曲1');
+  assert.equal(reopened.items.find((item) => item.id === nextId).title, '翻唱歌曲2');
+  assert.ok(reopened.items.find((item) => item.id === ids[0]).deletedAt);
   assert.equal((await mutate('/' + ids[0] + '/restore', 'POST')).status, 200);
   api.close();
   api = await createAPI(config);
   assert.equal((await list()).items.find((item) => item.id === ids[0]).deletedAt, null);
+  await mutate('/' + ids[0], 'PATCH', { title: '   ' });
+  api.close();
+  api = await createAPI(config);
+  assert.equal((await list()).items.find((item) => item.id === ids[0]).title, '翻唱歌曲1');
 });
 
 async function frontendLibrary(store = new Map()) {
@@ -125,6 +158,7 @@ async function frontendLibrary(store = new Map()) {
       calls.push({ url, ...options });
       if (options.method === 'DELETE') item = { ...item, deletedAt: '2026-11-26' };
       if (options.method === 'POST') item = { ...item, deletedAt: null };
+      if (options.method === 'PATCH') item = { ...item, title: JSON.parse(options.body).title };
       return {
         ok: true,
         json: async () =>
@@ -166,4 +200,14 @@ test('hiding and restoring a demo survives browser reload and never deletes shar
   await reopened.library.change('pop', true);
   assert.equal(reopened.library.hidden('pop'), false);
   assert.equal(h.calls.length + reopened.calls.length, 0);
+});
+
+test('library rename sends metadata and refreshes the displayed title', async () => {
+  const h = await frontendLibrary();
+  await h.library.load();
+  const key = h.library.tracks()[0][0];
+  await h.library.rename(key, '我的新翻唱');
+  assert.equal(h.library.tracks()[0][1].title, '我的新翻唱');
+  assert.equal(h.calls.at(-1).method, 'PATCH');
+  assert.deepEqual(JSON.parse(h.calls.at(-1).body), { title: '我的新翻唱' });
 });

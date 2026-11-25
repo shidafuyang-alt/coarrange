@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 // Exercise the real click handler; no music or LLM credentials are used by this fixture.
-async function frontend(t, status = 'ready') {
+async function frontend(t, status = 'ready', title = '') {
   const calls = [],
     listeners = {},
     nodes = new Map(),
@@ -105,6 +105,15 @@ async function frontend(t, status = 'ready') {
       value: 'Quiet piano music',
     },
   });
+  if (title)
+    listeners.input[0]({
+      target: {
+        closest: () => root,
+        hasAttribute: () => false,
+        dataset: { agentField: 'title' },
+        value: title,
+      },
+    });
   const button = { dataset: { agentAction: 'plan' }, closest: () => root };
   const click = {
     target: { closest: (selector) => (selector === '[data-agent-action]' ? button : null) },
@@ -172,4 +181,11 @@ test('prepared-track and Agent playback pause each other without pausing the act
   assert.deepEqual(pauses, { main: 0, first: 1, second: 1, remix: 0 });
   h.listeners.play[0]({ target: first });
   assert.deepEqual(pauses, { main: 1, first: 1, second: 2, remix: 1 });
+});
+
+test('optional track name is sent to the job endpoint and kept out of planning', async (t) => {
+  const h = await frontend(t, 'ready', '我的翻唱名字');
+  assert.equal(h.calls.find((call) => call.path === '/api/jobs').body.title, '我的翻唱名字');
+  assert.equal(h.calls.find((call) => call.path === '/api/plans').body.title, undefined);
+  assert.match(h.html, /作品名称（可选）/);
 });

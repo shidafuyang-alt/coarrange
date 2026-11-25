@@ -7,6 +7,7 @@ window.MusicCraftAgent = (() => {
         engineId: 'auto',
         plannerId: 'auto',
         instruction: '',
+        title: '',
         feedback: '',
         duration: 20,
         style: '',
@@ -230,6 +231,7 @@ window.MusicCraftAgent = (() => {
       ${modelWorkflow(mode)}
       <div class="agent-layout"><div>
       <label class="field-label">${s.plan ? '补充要求或下一轮修改' : '你的音乐要求'}<textarea class="textarea" data-agent-field="instruction" placeholder="${voice ? '用参考歌声替换原唱，保留原曲旋律、歌词与伴奏。' : cover ? '改成木吉他流行风，尽量保留旋律，纯音乐' : '雨天听的安静钢琴和弦乐，纯音乐'}">${esc(s.instruction)}</textarea></label>
+      <label class="field-label">作品名称（可选）<input type="text" maxlength="80" data-agent-field="title" value="${esc(s.title || '')}" placeholder="${voice ? '留空自动命名，例如翻唱歌曲1' : cover ? '留空自动命名，例如改编歌曲1' : '留空自动命名，例如原创歌曲1'}"></label>
       <label class="field-label">源音频片段${cover || voice ? '' : '（改编时使用）'}<input type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg" data-agent-field="file"></label><p class="helper" data-agent-file>${esc(s.file?.name || (s.assetId ? '沿用上一轮源音频' : voice ? '换声支持 10–40 秒片段；可用起点选择整首歌曲中的位置。' : '改编时请选择 10–60 秒的片段，最大 30 MB。制定计划时上传到应用，确认生成后发送给模型服务。'))}</p>
       ${voice ? `<label class="field-label">我的歌声参考录音<input type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg" data-agent-field="referenceFile"></label><p class="helper" data-agent-reference>${esc(s.referenceFile?.name || (s.referenceId ? '沿用上一轮参考歌声' : '请上传自己 3–20 秒的清晰独唱，尽量没有伴奏和混响。'))}</p><p class="helper">先分离原唱与伴奏，再按参考音色转换歌声并混音。效果取决于录音和分离质量，原唱可能有残留。</p>` : ''}
       <div class="agent-controls">${voice ? `<label>原曲起点（秒）<input type="number" min="0" max="3600" value="${s.clipStart}" data-agent-field="clipStart"></label><label>人声音量（dB）<input type="number" min="-12" max="6" value="${s.vocalGain}" data-agent-field="vocalGain"></label>` : `<label>目标风格<select data-agent-field="style"><option value="">根据描述决定</option>${MusicCatalog.styles.map((style) => `<option value="${style.en}" ${s.style === style.en ? 'selected' : ''}>${style.name}</option>`).join('')}</select></label>`}<label>时长（秒）<input type="number" min="10" max="${voice ? 40 : 60}" step="1" value="${s.duration}" data-agent-field="duration"></label>${voice ? '<span>保留原曲旋律与歌词</span>' : `<label>随机种子<input type="number" min="0" max="2147483647" value="${s.seed}" data-agent-field="seed"></label><label><input type="checkbox" ${s.instrumental ? 'checked' : ''} data-agent-field="instrumental"> 纯音乐</label>`}</div>
@@ -321,7 +323,7 @@ window.MusicCraftAgent = (() => {
     root.querySelectorAll('[data-agent-field]').forEach((node) => {
       node.disabled =
         states[mode].busy ||
-        (['file', 'referenceFile', 'engineId', 'plannerId', 'instrumental'].includes(
+        (['file', 'referenceFile', 'engineId', 'plannerId', 'instrumental', 'title'].includes(
           node.dataset.agentField,
         ) &&
           ['queued', 'running'].includes(states[mode].job?.status));
@@ -330,7 +332,7 @@ window.MusicCraftAgent = (() => {
   }
   async function startGeneration(mode) {
     const s = states[mode];
-    s.job = await api('jobs', { planId: s.plan.id });
+    s.job = await api('jobs', { planId: s.plan.id, title: s.title || '' });
     if (s.job.status === 'succeeded') window.MusicCraftLibrary?.load();
     const token = ++s.token;
     poll(mode, token).catch((error) => {
@@ -450,6 +452,7 @@ window.MusicCraftAgent = (() => {
       }
       Object.assign(s, {
         instruction: '',
+        title: '',
         feedback: '',
         healthNote: '',
         plannerHealthNote: '',

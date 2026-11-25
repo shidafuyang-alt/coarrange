@@ -10,10 +10,18 @@ window.MusicCraftLibrary = (() => {
     const saved = JSON.parse(localStorage.getItem(hiddenKey) || '[]');
     if (Array.isArray(saved)) hidden = saved.filter((key) => typeof key === 'string');
   } catch {}
-  async function request(path, method = 'GET') {
+  async function request(path, method = 'GET', payload) {
     const response = await fetch('/api/library' + path, {
       method,
-      ...(method === 'GET' ? {} : { headers: { 'X-MusicCraft-Client': 'web' } }),
+      ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
+      ...(method === 'GET'
+        ? {}
+        : {
+            headers: {
+              'X-MusicCraft-Client': 'web',
+              ...(payload === undefined ? {} : { 'Content-Type': 'application/json' }),
+            },
+          }),
     });
     let body;
     try {
@@ -53,7 +61,9 @@ window.MusicCraftLibrary = (() => {
     return items.map((item) => [
       `generated-${item.id}`,
       {
-        title: String(item.title || '我的音乐作品').slice(0, 120),
+        title: String(item.title || '我的音乐作品').slice(0, 80),
+        customTitle: item.customTitle || '',
+        defaultTitle: item.defaultTitle || item.title,
         subtitle:
           String(item.model || 'MusicCraft') +
           (Number.isFinite(Date.parse(item.createdAt))
@@ -97,6 +107,15 @@ window.MusicCraftLibrary = (() => {
     revision++;
     notify();
   }
+  async function rename(key, title) {
+    const id = key.slice('generated-'.length);
+    if (!key.startsWith('generated-') || !items.some((item) => item.id === id))
+      throw Error('作品不存在，请刷新作品库。');
+    const updated = await request('/' + id, 'PATCH', { title });
+    items = items.map((item) => (item.id === id ? updated : item));
+    revision++;
+    notify();
+  }
   window.addEventListener('musiccraft-library-refresh', load);
   window.addEventListener('storage', (event) => {
     if (event.key === hiddenKey) {
@@ -111,6 +130,7 @@ window.MusicCraftLibrary = (() => {
     load,
     tracks,
     change,
+    rename,
     hidden: (key) => hidden.includes(key),
     get error() {
       return error;

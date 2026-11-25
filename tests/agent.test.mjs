@@ -420,3 +420,20 @@ test('voice cancellation is forwarded to the dedicated worker', async (t) => {
     await new Promise((r) => setTimeout(r, 10));
   assert.equal(h.captured.voiceCancelled, true);
 });
+
+test('job names are saved without changing the music plan and unnamed successes get numbered names', async (t) => {
+  const h = await harness(t);
+  const first = await h.plan();
+  const started = await h.request('jobs', { planId: first.data.id, title: '我的原创作品' });
+  assert.equal((await h.finished(started.data.id)).status, 'succeeded');
+  const second = await h.plan();
+  const next = await h.request('jobs', { planId: second.data.id });
+  assert.equal((await h.finished(next.data.id)).status, 'succeeded');
+  const library = await h.request('library');
+  assert.equal(
+    library.data.items.find((item) => item.id === started.data.id).title,
+    '我的原创作品',
+  );
+  assert.equal(library.data.items.find((item) => item.id === next.data.id).title, '原创歌曲2');
+  assert.ok(h.captured.prompts.every((prompt) => !JSON.stringify(prompt).includes('我的原创作品')));
+});

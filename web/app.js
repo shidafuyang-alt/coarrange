@@ -260,7 +260,16 @@ function trackRow(key) {
   const t = tracks[key],
     title = libraryHTML(t.title),
     deleted = libraryDeleted(key);
-  return `<div class="track-row${t.generated ? ' track-generated' : ''}" data-search="${libraryHTML((t.title + ' ' + t.style).toLowerCase())}"><img src="${t.cover}" alt=""><div><h3 ${t.generated ? 'data-i18n-ignore' : ''}>${title}</h3><p ${t.generated ? 'data-i18n-ignore' : ''}>${libraryHTML(t.subtitle)}</p></div><span>${libraryHTML(t.style)}</span><span>${libraryHTML(t.duration || '0:38')}</span><div class="track-actions">${deleted ? `<button class="btn btn-outline" data-library-restore="${key}">恢复</button>` : `<button class="icon-btn" data-play="${key}" aria-label="播放" title="${title}">${icon('play')}</button><button class="icon-btn favorite-btn ${favorites.includes(key) ? 'is-active' : ''}" data-fav="${key}" aria-label="${favorites.includes(key) ? '取消收藏' : '收藏'}" title="${title}">${icon('heart')}</button><a class="icon-btn" href="${t.src}" download="MusicCraft-${key}" aria-label="下载音频" title="${title}">${icon('download')}</a><button class="icon-btn" data-library-delete="${key}" aria-label="移入回收站" title="${title}">${icon('trash-2')}</button>`}</div></div>`;
+  return `<div class="track-row${t.generated ? ' track-generated' : ''}" data-search="${libraryHTML((t.title + ' ' + t.style).toLowerCase())}"><img src="${t.cover}" alt=""><div><h3 ${t.generated ? 'data-i18n-ignore' : ''}>${title}</h3><p ${t.generated ? 'data-i18n-ignore' : ''}>${libraryHTML(t.subtitle)}</p></div><span>${libraryHTML(t.style)}</span><span>${libraryHTML(t.duration || '0:38')}</span><div class="track-actions">${deleted ? `<button class="btn btn-outline" data-library-restore="${key}">恢复</button>` : `<button class="icon-btn" data-play="${key}" aria-label="播放" title="${title}">${icon('play')}</button><button class="icon-btn favorite-btn ${favorites.includes(key) ? 'is-active' : ''}" data-fav="${key}" aria-label="${favorites.includes(key) ? '取消收藏' : '收藏'}" title="${title}">${icon('heart')}</button><a class="icon-btn" href="${t.src}" download="MusicCraft-${key}" aria-label="下载音频" title="${title}">${icon('download')}</a>${t.generated ? `<button class="icon-btn" data-library-rename="${key}" aria-label="重命名" title="${title}">${icon('pencil')}</button>` : ''}<button class="icon-btn" data-library-delete="${key}" aria-label="移入回收站" title="${title}">${icon('trash-2')}</button>`}</div></div>`;
+}
+function openLibraryName(key) {
+  const track = tracks[key];
+  if (!track?.generated) return;
+  $('#modal-root').innerHTML =
+    `<div class="modal-overlay"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="library-name-heading"><div class="modal-head"><h2 id="library-name-heading">给作品命名</h2><button class="icon-btn" data-action="close-modal" aria-label="关闭">${icon('x')}</button></div><label class="field-label">作品名称<input id="library-title" type="text" maxlength="80" value="${libraryHTML(track.customTitle)}" placeholder="${libraryHTML(track.defaultTitle)}"></label><p class="helper">留空使用自动编号名称，最多 80 个字符。</p><p class="agent-error" id="library-name-error" role="alert"></p><button class="btn btn-primary" data-library-save-name="${key}">保存名称</button></section></div>`;
+  icons();
+  $('#library-title').focus();
+  $('#library-title').select();
 }
 function refreshLibraryView() {
   const section = document.getElementById('library');
@@ -285,6 +294,7 @@ window.addEventListener('musiccraft-library-changed', () => {
     audio.src = tracks[current].src;
     updatePlayer();
   }
+  if (tracks[current]?.generated) updatePlayer();
   refreshLibraryView();
 });
 function arrangeView() {
@@ -627,6 +637,22 @@ document.addEventListener('click', async (e) => {
     await MusicCraftLibrary.load();
     return;
   }
+  if (b.dataset.libraryRename) {
+    openLibraryName(b.dataset.libraryRename);
+    return;
+  }
+  if (b.dataset.librarySaveName) {
+    b.disabled = true;
+    try {
+      await MusicCraftLibrary.rename(b.dataset.librarySaveName, $('#library-title').value);
+      $('#modal-root').innerHTML = '';
+      toast('作品名称已保存');
+    } catch (error) {
+      $('#library-name-error').textContent = CoLocale.text(error.message);
+      b.disabled = false;
+    }
+    return;
+  }
   if (b.dataset.libraryDelete || b.dataset.libraryRestore) {
     const restore = Boolean(b.dataset.libraryRestore);
     const key = b.dataset.libraryRestore || b.dataset.libraryDelete;
@@ -918,3 +944,10 @@ document.addEventListener('change', (event) => {
 });
 MusicCraftLibrary.load();
 window.addEventListener('focus', () => MusicCraftLibrary.load());
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && event.target.id === 'library-title') {
+    event.preventDefault();
+    document.querySelector('[data-library-save-name]:not(:disabled)')?.click();
+  }
+});

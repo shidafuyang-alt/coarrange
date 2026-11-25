@@ -75,11 +75,49 @@ export async function createAPI(config) {
     ...job,
     audioUrl: job.output ? `/api/jobs/${job.id}/audio` : null,
   });
+  const namingPrefixes = { voice: '翻唱歌曲', restyle: '改编歌曲', create: '原创歌曲' };
+  const namingMode = (job) => records.get(job.planId)?.mode || 'create';
+  const namingCounters = { voice: 0, restyle: 0, create: 0 };
+  for (const job of records.values()) {
+    if (job.kind === 'job' && Number.isSafeInteger(job.libraryNumber) && job.libraryNumber > 0)
+      namingCounters[namingMode(job)] = Math.max(
+        namingCounters[namingMode(job)] || 0,
+        job.libraryNumber,
+      );
+  }
+  const assignLibraryNumber = (job) => {
+    if (!Number.isSafeInteger(job.libraryNumber) || job.libraryNumber < 1) {
+      job.libraryNumber = ++namingCounters[namingMode(job)];
+      return true;
+    }
+    return false;
+  };
+  const defaultTitle = (job) =>
+    (namingPrefixes[namingMode(job)] || namingPrefixes.create) + job.libraryNumber;
+  const validateTitle = (value) => {
+    if (
+      typeof value !== 'string' ||
+      value.trim().length > 80 ||
+      /[\u0000-\u001f\u007f]/.test(value)
+    )
+      throw new ApiError(400, '作品名称最多 80 个字符，不能包含换行或控制字符。');
+    return value.trim();
+  };
+  const completed = [...records.values()]
+    .filter((job) => job.kind === 'job' && job.status === 'succeeded' && job.output)
+    .sort(
+      (a, b) =>
+        String(a.createdAt || a.finishedAt).localeCompare(String(b.createdAt || b.finishedAt)) ||
+        a.id.localeCompare(b.id),
+    );
+  for (const job of completed) if (assignLibraryNumber(job)) await save(job);
   const libraryItem = (job) => {
     const plan = records.get(job.planId);
     return {
       id: job.id,
-      title: String(plan?.brief?.summary || '我的音乐作品').slice(0, 120),
+      title: job.libraryTitle || defaultTitle(job),
+      customTitle: job.libraryTitle || '',
+      defaultTitle: defaultTitle(job),
       mode: plan?.mode || 'create',
       duration: plan?.brief?.duration || 0,
       model: job.model || '',
@@ -152,6 +190,7 @@ export async function createAPI(config) {
             }
           }
           aborter.signal.throwIfAborted();
+          assignLibraryNumber(job);
           Object.assign(job, {
             status: 'succeeded',
             stage: 'complete',
@@ -228,7 +267,10 @@ export async function createAPI(config) {
         const [, , , id, action] = path.split('/');
         const job = get(id, 'job');
         if (!libraryReady(job)) throw new ApiError(409, '只能管理已完成的音乐作品');
-        if (!action && req.method === 'DELETE') {
+        if (!action && req.method === 'PATCH') {
+          const { title } = await jsonBody(req);
+          job.libraryTitle = validateTitle(title);
+        } else if (!action && req.method === 'DELETE') {
           job.libraryDeletedAt ||= new Date().toISOString();
         } else if (action === 'restore' && req.method === 'POST') {
           delete job.libraryDeletedAt;
@@ -392,6 +434,7 @@ export async function createAPI(config) {
       } else if (path === '/api/jobs' && req.method === 'POST') {
         const body = await jsonBody(req),
           plan = get(body.planId, 'plan');
+        const title = validateTitle(body.title === undefined ? '' : body.title);
         if (connectionSaving) throw new ApiError(409, '请等待模型连接保存完成');
         if (plan.brief.status !== 'ready')
           throw new ApiError(409, '该计划需要澄清或包含当前工具不支持的要求');
@@ -418,6 +461,7 @@ export async function createAPI(config) {
             id: randomUUID(),
             kind: 'job',
             planId: plan.id,
+            libraryTitle: title,
             status: 'queued',
             stage: 'queued',
             provenance: 'live-model',

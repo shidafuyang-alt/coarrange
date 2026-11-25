@@ -1,5 +1,19 @@
 'use strict';
 window.MusicCraftMessages = {
+  '作品名称（可选）': 'Track name (optional)',
+  '留空自动命名，例如翻唱歌曲1': 'Leave blank for an automatic cover-song name',
+  '留空自动命名，例如改编歌曲1': 'Leave blank for an automatic remix name',
+  '留空自动命名，例如原创歌曲1': 'Leave blank for an automatic original-song name',
+  重命名: 'Rename',
+  给作品命名: 'Name your track',
+  作品名称: 'Track name',
+  '留空使用自动编号名称，最多 80 个字符。':
+    'Leave blank to use the automatic numbered name. Maximum 80 characters.',
+  保存名称: 'Save name',
+  作品名称已保存: 'Track name saved',
+  '作品名称最多 80 个字符，不能包含换行或控制字符。':
+    'Use up to 80 characters, without line breaks or control characters.',
+
   '翻唱、改编和创作完成后自动入库，随时试听、收藏或下载。':
     'Completed covers, remixes and new music are saved automatically. Listen, favorite or download anytime.',
   全部作品: 'All tracks',
