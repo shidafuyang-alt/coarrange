@@ -83,8 +83,8 @@ window.CoLocale = (() => {
       'Demucs isolates the vocal, CREPE transcribes its notes and slides, and the chords are read from the backing. Five new versions play that same line on sampled or synthesized instruments, with no source audio mixed in.',
     '早期版本由本地 ACE-Step 模型直接生成，旋律容易走样，保留作对比。所有版本已匹配响度；MIDI 工作台使用另一首原创示例。':
       'The early versions came straight from a local ACE-Step model, whose melody tends to drift; they are kept for comparison. All versions are loudness-matched. The MIDI workbench uses a separate original example.',
-    '提前制作的真实改编案例。上传其他歌曲的实时改编尚未开放。':
-      'A real example, prepared in advance. Live rearrangement of other uploads is not available yet.',
+    '这里是提前制作的改编案例；上传歌曲可使用上方的创作与改编工作区。':
+      'These examples were prepared in advance. Use the create and restyle workspace above to upload your own song.',
     西北喜宴: 'Northwest wedding',
     '唢呐、二胡与锣鼓': 'Suona, erhu, gongs',
     '早期 AI 改编': 'Early AI cover',

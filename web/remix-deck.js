@@ -98,6 +98,7 @@ window.CoRemix = (() => {
     if (ticket !== generation) return;
     if (studioPlaying) stopStudio();
     audio.pause();
+    document.querySelectorAll('[data-agent-output] audio').forEach((player) => player.pause());
     const when = ctx.currentTime + 0.08;
     master.gain.value = 1.5 * audio.volume;
     channels = buffers.map((buffer, i) => {

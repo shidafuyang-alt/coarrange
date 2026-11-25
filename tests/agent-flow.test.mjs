@@ -105,7 +105,7 @@ async function frontend(t, status = 'ready') {
   };
   await listeners.click[0](click);
   await new Promise((done) => setTimeout(done, 10));
-  return { calls, nodes, html: scope.MusicCraftAgent.workspace(), saved };
+  return { calls, nodes, html: scope.MusicCraftAgent.workspace(), saved, scope, listeners };
 }
 
 test('one Generate click privately plans then queues music, without a Prompt confirmation UI', async (t) => {
@@ -125,4 +125,36 @@ test('clarification is shown to the user and never automatically submitted to a 
     ['/api/status', '/api/plans'],
   );
   assert.match(h.nodes.get('[data-agent-output]').innerHTML, /Which mood\?/);
+});
+
+test('prepared-track and Agent playback pause each other without pausing the active player', async (t) => {
+  const h = await frontend(t);
+  const pauses = { main: 0, first: 0, second: 0, remix: 0 };
+  const first = {
+    pause() {
+      pauses.first++;
+    },
+    closest: () => ({}),
+  };
+  const second = {
+    pause() {
+      pauses.second++;
+    },
+  };
+  h.scope.audio = {
+    pause() {
+      pauses.main++;
+    },
+  };
+  h.scope.studioPlaying = false;
+  h.scope.CoRemix = {
+    stop() {
+      pauses.remix++;
+    },
+  };
+  h.scope.document.querySelectorAll = () => [first, second];
+  h.listeners.play[0]({ target: h.scope.audio });
+  assert.deepEqual(pauses, { main: 0, first: 1, second: 1, remix: 0 });
+  h.listeners.play[0]({ target: first });
+  assert.deepEqual(pauses, { main: 1, first: 1, second: 2, remix: 1 });
 });

@@ -14,7 +14,7 @@ function songCaseStudy() {
     </div>
     <div class="song-case-footer"><p>${icon('repeat-2')}播放中切换 A / B，会保留当前进度。</p><button class="text-btn" data-action="song-restart">${icon('rotate-ccw')}从原曲开头听</button><button class="text-btn" data-compare="song-classical">${icon('history')}对比：早期 AI 改编</button><button class="text-btn" data-compare="song-alternative">${icon('piano')}另一个改编版本</button></div>
     <details class="song-process"><summary>本次改编做了什么？</summary><div><p>先用 Demucs 分离人声，再用 CREPE 转录旋律与滑音，并从伴奏中识别和弦。五个新版本用采样乐器演奏同一条旋律，没有叠加原曲音频。</p><p>早期版本由本地 ACE-Step 模型直接生成，旋律容易走样，保留作对比。所有版本已匹配响度；MIDI 工作台使用另一首原创示例。</p></div></details>
-    <p class="song-boundary">提前制作的真实改编案例。上传其他歌曲的实时改编尚未开放。</p>
+    <p class="song-boundary">这里是提前制作的改编案例；上传歌曲可使用上方的创作与改编工作区。</p>
   </section>`;
 }
 function updateSongCase() {

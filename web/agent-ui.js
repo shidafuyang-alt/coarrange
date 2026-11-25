@@ -583,10 +583,13 @@ window.MusicCraftAgent = (() => {
   document.addEventListener(
     'play',
     (event) => {
-      if (!event.target.closest?.('[data-agent-output]')) return;
-      audio.pause();
-      if (studioPlaying) stopStudio();
-      CoRemix.stop();
+      const agentPlayback = event.target.closest?.('[data-agent-output]');
+      if (!agentPlayback && event.target !== audio) return;
+      if (agentPlayback) {
+        audio.pause();
+        if (studioPlaying) stopStudio();
+        CoRemix.stop();
+      }
       document.querySelectorAll('[data-agent-output] audio').forEach((player) => {
         if (player !== event.target) player.pause();
       });
