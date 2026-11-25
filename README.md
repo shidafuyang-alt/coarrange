@@ -2,7 +2,7 @@
 
 A bilingual music arrangement prototype for people who have ideas, but no music theory background. Explore an original melody in 13 styles, compare prepared AI arrangements, and build a playful arrangement with 31 instrument sounds.
 
-This is a course-project demo. It runs entirely in the browser and requires no API key, backend service, paid subscription, or GPU.
+This is a course-project demo. Listening, arrangement, and Hum-to-MIDI run in the browser and need no API key. Generating a new full piece from a hum is optional: it uses the local Node server, a DeepSeek key, and a local ACE-Step 1.5 Turbo checkout.
 
 ## Quick start
 
@@ -25,6 +25,8 @@ npm start
 
 Open **http://localhost:8788/#hum**. Licenses are in [web/third-party/NOTICES.txt](web/third-party/NOTICES.txt).
 
+Recording, melody preview, MIDI export, and **Open the arrangement desk** work with this server alone. **Generate my music** also needs the optional generation setup below. The Python static server cannot run that generation route.
+
 Alternatively, with Python 3 installed:
 
 ```bash
@@ -32,6 +34,39 @@ python3 -m http.server 8788 --directory web
 ```
 
 Serve the `web/` directory rather than opening `web/index.html` directly: instrument samples and the score are loaded through `fetch`.
+
+## Optional full-piece generation
+
+The Hum page can send the recognized melody to DeepSeek for a short English description, then to a local ACE-Step 1.5 Turbo text-to-music run of about 60 seconds. The instrument text, song form, seed, and inference settings stay in `tools/ace-step/`. Model weights, the Python environment, and generated audio stay outside this repository.
+
+Create a private env file from the example, then start the server in that same terminal:
+
+```bash
+cp .env.example .env.local
+# Edit .env.local, then load it without printing the key:
+set -a
+source .env.local
+set +a
+npm start
+```
+
+`.env.local` is ignored by git. `DEEPSEEK_API_KEY` is read only from the server process. Leave it empty in `.env.example`.
+
+`ACESTEP_ROOT` is the ACE-Step checkout root, the directory that contains both `code/` and `checkpoints/`. Do not point it at `code/` or `checkpoints/` alone. The server looks for these paths inside it:
+
+```text
+$ACESTEP_ROOT/code/cli.py
+$ACESTEP_ROOT/code/.venv/bin/python
+$ACESTEP_ROOT/checkpoints/acestep-v15-turbo/model.safetensors
+```
+
+If the Python executable lives somewhere else, set `ACESTEP_PYTHON` to that executable. Weights, the virtual environment, generated wav files, and run logs stay outside this repository.
+
+Apple Silicon is the only combination tested here. Leave `ACESTEP_DEVICE` and `ACESTEP_BACKEND` unset. The server then uses `mps` and `mlx`, and the checkout's virtual environment must provide MLX.
+
+On Linux, Windows, or any machine without MPS, those defaults will not run. Set `ACESTEP_DEVICE` to `cuda`, `cpu`, or `auto`, and `ACESTEP_BACKEND` to `pt` or `vllm`. `mps` and `mlx` are Apple-only. Other device and backend pairs were not tested in this project.
+
+Generation runs one piece at a time and can take several minutes. Do not commit weights, virtual environments, wav outputs, or run logs.
 
 ## Demo features
 
@@ -107,7 +142,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the working agreement and [docs/ARCHI
 
 **Implemented:** real prepared audio, actual local sample playback, editable arrangement templates, MIDI import/export, and the interface features listed above. Ten additional versions of the original theme and the supplied-song arrangements were genuinely generated offline using ACE-Step 1.5 Turbo. Their prompts, seeds, and checks are recorded in [docs/audio/](docs/audio/).
 
-**Not connected yet:** live music generation for arbitrary text or uploads, model APIs, multi-agent LLM critique, and in-app source separation or transcription. The five melody-locked remixes were produced offline with separation, transcription, and hand-written arrangement rules; see [tools/remix/](tools/remix/README.md). Text records a direction; it does not change the prepared listening audio. The workbench provides a separate editable interpretation of the original theme and does not reproduce every detail of an AI-rendered version.
+**Optional, on this branch:** a hummed or uploaded melody can be transcribed in the browser, exported as MIDI, opened in the arrangement workbench, or sent through DeepSeek and local ACE-Step Turbo to generate one instrumental piece. The prepared listening audio is unchanged.
+
+**Not connected yet:** generation from arbitrary text alone, multi-agent LLM critique, and in-app source separation. The five melody-locked remixes were produced offline with separation, transcription, and hand-written arrangement rules; see [tools/remix/](tools/remix/README.md). A written wish is appended to the generation caption; it does not change the prepared listening audio. The workbench provides a separate editable interpretation and does not reproduce every detail of an AI-rendered version.
 
 MIDI import targets simple melodic Type 0/1 PPQ files. General MIDI does not define an erhu program, so the erhu part uses a fiddle mapping on export; its recorded erhu sound is available inside this application. Generative covers can change melodic details. Automated audio metrics are supporting checks, not a claim of human listening approval.
 

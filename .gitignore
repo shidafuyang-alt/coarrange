@@ -7,4 +7,9 @@ web/vendor/model/
 artifacts/
 .env
 .env.*
+!.env.example
 *.pem
+**/*.safetensors
+**/checkpoints/
+**/web-out/
+**/web-runs/

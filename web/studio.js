@@ -19,6 +19,9 @@ window.CoStudio = (() => {
     category: '全部',
     request: 0,
     preview: [],
+    songSource: false,
+    sections: null,
+    arrangement: null,
   };
   let initializing;
   async function initialize() {
@@ -32,14 +35,24 @@ window.CoStudio = (() => {
     await initializing;
   }
   function view() {
-    const preset = styles.find((s) => s.id === state.style);
+    const songBars = state.sections
+      ? state.sections.reduce((sum, section) => sum + section.bars, 0)
+      : 8;
+    const sections = state.sections
+      ? `<div class="song-sections" aria-label="音乐段落">${state.sections
+          .map(
+            (section) =>
+              `<span style="flex:${section.bars}"><b>段落：${escapeHtml(section.name)}</b><small data-i18n-ignore>${section.bars}</small></span>`,
+          )
+          .join('')}</div>`
+      : '';
     return `<div class="view-title studio-header"><section><p class="eyebrow">BUILD YOUR OWN UNEXPECTED SOUND.</p><h1>编曲，放开玩。</h1><p>让二胡领唱，让贝斯蹦迪。换乐器、加声部，亲手听见反差。</p></section><div><label class="btn btn-outline midi-upload-label" for="midi-upload">${icon('upload')}导入 MIDI<input type="file" id="midi-upload" class="file-input" accept=".mid,.midi"></label><button class="btn btn-primary" data-action="export-midi">${icon('download')}导出 MIDI</button></div></div>
     <section class="instrument-intro"><div><span class="card-icon">${icon('music-2')}</span><div><h2>你的乐器架，今天想加谁？</h2><p>31 种音色 · 二胡真实采样 · 最多 8 个声部</p></div></div><button class="btn btn-primary" data-add-instrument ${state.parts.length >= 8 ? 'disabled' : ''}>${icon('plus')}添加乐器</button></section>
     <div class="studio-toolbar"><strong id="studio-name"><span data-i18n-ignore>${escapeHtml(melodyLabel)}</span> · ${styles.find((s) => s.id === state.style).name}</strong><span class="spacer"></span><label>配器起点<select id="studio-preset" aria-label="选择编曲风格">${styles.map((s) => `<option value="${s.id}" ${s.id === state.style ? 'selected' : ''}>${s.name}</option>`).join('')}</select></label><label>速度 <input type="number" id="studio-bpm" aria-label="编曲速度 BPM" min="50" max="180" value="${bpm}"> BPM</label><label>移调 <select id="studio-key" aria-label="移调半音">${[-2, -1, 0, 1, 2].map((v) => `<option value="${v}" ${v === transpose ? 'selected' : ''}>${v === 0 ? '原调' : (v > 0 ? '＋' : '−') + Math.abs(v) + ' 半音'}</option>`).join('')}</select></label><button class="text-btn" data-action="reset-studio">重置</button></div>
-    <div class="studio-layout"><section class="studio-main"><div class="bar-ruler"><span>声部 / 钢琴卷帘</span><div>${Array.from({ length: 8 }, (_, i) => `<span>${i + 1}</span>`).join('')}</div></div>${state.parts
+    <div class="studio-layout"><section class="studio-main">${sections}<div class="bar-ruler"><span>声部 / 钢琴卷帘</span><div>${Array.from({ length: songBars }, (_, i) => `<span>${i + 1}</span>`).join('')}</div></div>${state.parts
       .map((id, k) => {
         const ins = find(id);
-        return `<div class="studio-track ${mutes[k] ? 'muted' : ''}" data-track="${k}"><div class="track-controls"><button class="instrument-name" data-change-instrument="${k}" title="更换乐器">${icon(ins.icon)}<span>${ins.name}</span>${icon('chevrons-up-down')}</button><div class="track-mix"><button class="mix-btn ${mutes[k] ? 'active' : ''}" data-mute="${k}" aria-label="静音${ins.name}" aria-pressed="${mutes[k]}">M</button><button class="mix-btn ${solos[k] ? 'active' : ''}" data-solo="${k}" aria-label="独奏${ins.name}" aria-pressed="${solos[k]}">S</button><input type="range" min="0" max="1" step=".01" value="${volumes[k]}" data-mix="${k}" aria-label="${ins.name}音量"><button class="track-remove" data-remove-part="${k}" aria-label="移除${ins.name}" ${state.parts.length <= 1 ? 'disabled' : ''}>${icon('x')}</button></div></div><div class="piano-roll" id="roll-${k}" aria-label="${ins.name}前八小节音符"></div></div>`;
+        return `<div class="studio-track ${mutes[k] ? 'muted' : ''}" data-track="${k}"><div class="track-controls"><button class="instrument-name" data-change-instrument="${k}" title="更换乐器">${icon(ins.icon)}<span>${ins.name}</span>${icon('chevrons-up-down')}</button><div class="track-mix"><button class="mix-btn ${mutes[k] ? 'active' : ''}" data-mute="${k}" aria-label="静音${ins.name}" aria-pressed="${mutes[k]}">M</button><button class="mix-btn ${solos[k] ? 'active' : ''}" data-solo="${k}" aria-label="独奏${ins.name}" aria-pressed="${solos[k]}">S</button><input type="range" min="0" max="1" step=".01" value="${volumes[k]}" data-mix="${k}" aria-label="${ins.name}音量"><button class="track-remove" data-remove-part="${k}" aria-label="移除${ins.name}" ${state.parts.length <= 1 ? 'disabled' : ''}>${icon('x')}</button></div></div><div class="piano-roll" id="roll-${k}" aria-label="${ins.name}${state.sections ? '整段作品音符' : '前八小节音符'}"></div></div>`;
       })
       .join(
         '',
@@ -59,7 +72,12 @@ window.CoStudio = (() => {
       .join(
         '',
       )}<div class="tip-box"><strong>一个小提示</strong><p>点击乐器名称就能替换音色。先按 S 单独听，再把其他乐器加回来。</p></div><button class="text-btn" data-action="soften">${icon('feather')}整体柔和一点</button></section></aside></div>
-    <p class="studio-info">工作台可实时更换乐器、增删声部与导出 MIDI。这里是原创主题的可编辑配器；AI 试听版本与工作台演奏会有差别。</p>`;
+    <p class="studio-info">${studioInfo()}</p>`;
+  }
+  function studioInfo() {
+    if (state.sections)
+      return '这段哼唱已经发展成前奏、主题、发展和结尾。可以播放、换风格，或导出 MIDI。';
+    return '工作台可实时更换乐器、增删声部与导出 MIDI。这里是原创主题的可编辑配器；AI 试听版本与工作台演奏会有差别。';
   }
   async function preset(id) {
     await initialize();
@@ -71,20 +89,32 @@ window.CoStudio = (() => {
     mutes = state.parts.map(() => false);
     solos = state.parts.map(() => false);
     volumes = state.parts.map((_, i) => (i === 0 ? 0.75 : 0.5));
-    studioNotes = CoScore.arrange(state.melody, state.style, state.parts);
+    if (state.songSource && window.CoSong) {
+      const song = CoSong.realize(state.melody, state.style, state.parts);
+      studioNotes = song.notes;
+      state.sections = song.sections;
+    } else {
+      state.sections = null;
+      studioNotes = CoScore.arrange(state.melody, state.style, state.parts);
+    }
     studioName = melodyLabel + ' · ' + style.name;
     studioPosition = 0;
     bpm = 108;
+    timebase = 108;
     transpose = 0;
     render();
   }
   async function paint() {
     await initialize();
     const notes = studioNotes || [];
+    const beats = state.sections
+      ? state.sections.reduce((sum, section) => sum + section.bars, 0) * 4
+      : 32;
+    const span = (beats * 60) / 108;
     state.parts.forEach((_, k) => {
       const el = document.querySelector(`#roll-${k}`);
       if (!el) return;
-      const part = notes.filter((n) => n.track === k && n.time < (32 * 60) / 108 + 0.56);
+      const part = notes.filter((n) => n.track === k && n.time < span + 0.56);
       if (!part.length) {
         el.innerHTML = '';
         return;
@@ -94,7 +124,7 @@ window.CoStudio = (() => {
       el.innerHTML = part
         .map(
           (n) =>
-            `<span class="note" style="left:${Math.max(0, ((n.time - 0.5556) / ((32 * 60) / 108)) * 100)}%;width:${Math.max(0.35, (n.duration / ((32 * 60) / 108)) * 100)}%;top:${8 + ((high - n.pitch) / Math.max(1, high - low)) * 65}%" title="MIDI ${n.pitch}"></span>`,
+            `<span class="note" style="left:${Math.max(0, ((n.time - 0.5556) / span) * 100)}%;width:${Math.max(0.35, (n.duration / span) * 100)}%;top:${8 + ((high - n.pitch) / Math.max(1, high - low)) * 65}%" title="MIDI ${n.pitch}"></span>`,
         )
         .join('');
     });
@@ -139,7 +169,7 @@ window.CoStudio = (() => {
         return g;
       });
       mix();
-      const ratio = bpm / 108,
+      const ratio = bpm / (timebase || 108),
         base = studioContext.currentTime + 0.08;
       const end = Math.max(...studioNotes.map((n) => (n.time + n.duration) / ratio)) + 1;
       if (studioPosition >= end - 0.1) studioPosition = 0;
@@ -327,6 +357,10 @@ window.CoStudio = (() => {
     try {
       await initialize();
       stop();
+      state.songSource = false;
+      state.arrangement = null;
+      state.sections = null;
+      timebase = 108;
       state.melody = parseMidi(await file.arrayBuffer());
       const style = styles.find((s) => s.id === state.style) || styles[1];
       melodyLabel =
@@ -342,6 +376,47 @@ window.CoStudio = (() => {
       return true;
     } catch (e) {
       toast('无法读取：' + e.message);
+      return false;
+    }
+  }
+  async function loadSong(file, styleId) {
+    if (!file || !window.CoSong) return false;
+    if (file.size > 2 * 1024 * 1024) {
+      toast('请选择小于 2 MB 的旋律 MIDI');
+      return false;
+    }
+    try {
+      stop();
+      const melody = parseMidi(await file.arrayBuffer());
+      if (!melody.length) throw Error('没有可用的旋律音符');
+      const style = styles.find((item) => item.id === (styleId || state.style)) || styles[1];
+      state.melody = melody;
+      state.songSource = true;
+      state.style = style.id;
+      state.parts = [...style.parts];
+      state.pans = state.parts.map((_, i) => ((i % 3) - 1) * 0.2);
+      mutes = state.parts.map(() => false);
+      solos = state.parts.map(() => false);
+      volumes = state.parts.map((_, i) => (i === 0 ? 0.75 : 0.5));
+      const song = CoSong.realize(state.melody, state.style, state.parts);
+      state.sections = song.sections;
+      studioNotes = song.notes;
+      melodyLabel =
+        file.name
+          .replace(/\.midi?$/i, '')
+          .replace(/[\\/]/g, '')
+          .slice(0, 80) || '哼唱旋律';
+      studioName = melodyLabel + ' · ' + style.name;
+      studioPosition = 0;
+      state.arrangement = null;
+      bpm = 108;
+      timebase = 108;
+      transpose = 0;
+      render();
+      toast('已把哼唱发展成前奏、主题、发展和结尾。');
+      return true;
+    } catch (error) {
+      toast('无法生成作品：' + error.message);
       return false;
     }
   }
@@ -368,11 +443,11 @@ window.CoStudio = (() => {
           const pitch = Math.max(0, Math.min(127, n.pitch + (id === 'drums' ? 0 : transpose)));
           events.push(
             {
-              t: Math.round((n.time / (60 / 108)) * 480),
+              t: Math.round((n.time / (60 / (timebase || 108))) * 480),
               m: [0x90 | channel, pitch, Math.max(1, Math.round(n.velocity * volumes[k]))],
             },
             {
-              t: Math.round(((n.time + n.duration) / (60 / 108)) * 480),
+              t: Math.round(((n.time + n.duration) / (60 / (timebase || 108))) * 480),
               m: [0x80 | channel, pitch, 0],
             },
           );
@@ -450,10 +525,15 @@ window.CoStudio = (() => {
     restart,
     exportMidi,
     importMidi,
+    loadSong,
     preset,
     reset: async () => {
       melodyLabel = '晴日来信';
       state.melody = null;
+      state.songSource = false;
+      state.arrangement = null;
+      state.sections = null;
+      timebase = 108;
       initializing = undefined;
       await preset('classical');
     },

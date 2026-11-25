@@ -1350,6 +1350,38 @@ main {
   justify-content: space-around;
   align-items: center;
 }
+.song-sections {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px 8px 165px;
+  background: #f7f2fa;
+  border-bottom: 1px solid #eae2ef;
+}
+.song-sections span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 0;
+  border-radius: 6px;
+  background: #efe4f4;
+  color: #6d4d78;
+  font-size: 11px;
+}
+.song-sections small {
+  color: #ad98ba;
+  font-size: 9px;
+}
+.song-sections span:nth-child(2) {
+  background: #f3d5e4;
+}
+.song-sections span:nth-child(3) {
+  background: #e4d8f6;
+}
+.song-sections span:nth-child(4) {
+  background: #e7eee4;
+}
 .studio-track.muted .piano-roll {
   opacity: 0.3;
 }

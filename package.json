@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "pitch-model": "node scripts/fetch-pitch-model.mjs",
-    "test:pitch": "npm test --prefix audio-midi"
+    "test:pitch": "npm test --prefix audio-midi",
+    "test:song": "node scripts/test-song-form.mjs"
   },
   "devDependencies": {
     "prettier": "3.6.2"

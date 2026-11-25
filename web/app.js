@@ -445,13 +445,15 @@ function parseMidi(buffer) {
           b = type === 12 || type === 13 ? 0 : u8();
         const id = ch * 128 + a;
         if (ch === 9) continue;
-        if (type === 9 && b > 0) active.set(id, { tick, pitch: a, velocity: b });
+        if (type === 9 && b > 0) {
+          const stack = active.get(id) || [];
+          stack.push({ tick, pitch: a, velocity: b });
+          active.set(id, stack);
+        }
         if (type === 8 || (type === 9 && b === 0)) {
-          const n = active.get(id);
-          if (n) {
-            raw.push({ ...n, end: tick });
-            active.delete(id);
-          }
+          const stack = active.get(id);
+          const n = stack && stack.shift();
+          if (n) raw.push({ ...n, end: tick });
         }
       }
     }

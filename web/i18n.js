@@ -556,8 +556,8 @@ window.CoLocale = (() => {
     夏日主题: 'Summer theme',
     哼唱成曲: 'Hum to music',
     '哼一段旋律。': 'Hum a melody.',
-    '用麦克风哼 5 到 15 秒。确认识别出的旋律后，选一种风格，生成可以播放的伴奏。':
-      'Hum for 5 to 15 seconds. Preview the recognized melody, choose a style, and make an accompaniment.',
+    '用麦克风哼 5 到 15 秒。确认识别出的旋律后，选一种风格，把它发展成一段有前奏、主题、发展和结尾的短曲。':
+      'Hum for 5 to 15 seconds. Preview the recognized melody, choose a style, and develop it into a short piece with an intro, theme, development, and ending.',
     '1 哼唱': '1 Hum',
     '2 识别': '2 Recognize',
     '3 试听': '3 Preview',
@@ -595,6 +595,13 @@ window.CoLocale = (() => {
     换一段再试: 'Try another take',
     选择伴奏风格: 'Choose an accompaniment style',
     生成编曲: 'Make the arrangement',
+    生成作品: 'Make the piece',
+    '段落：前奏': 'Intro',
+    '段落：主题': 'Theme',
+    '段落：发展': 'Development',
+    '段落：结尾': 'Ending',
+    整段作品音符: ' notes in the piece',
+    前八小节音符: ' notes in the first eight bars',
     '已截取前 15 秒。': 'Only the first 15 seconds were used.',
     '录音太短了，请至少哼 1 秒。': 'That recording is too short. Hum for at least one second.',
     '这段录音几乎没有声音。请靠近麦克风再试。':
@@ -628,6 +635,12 @@ window.CoLocale = (() => {
     识别没有完成: 'Recognition did not finish',
     识别没有成功: 'Recognition did not succeed',
     '请先识别出旋律，再生成编曲。': 'Recognize a melody before making an arrangement.',
+    '请先识别出旋律，再生成作品。': 'Recognize a melody before making a piece.',
+    '已把哼唱发展成前奏、主题、发展和结尾。':
+      'The hum is now an intro, theme, development, and ending.',
+    '无法生成作品：': 'The piece could not be made: ',
+    '这段哼唱已经发展成前奏、主题、发展和结尾。可以播放、换风格，或导出 MIDI。':
+      'This hum is now an intro, theme, development, and ending. Play it, change the style, or export MIDI.',
     '可以重录，或再识别一次。': 'Record again, or recognize this take once more.',
     '已从这段录音中识别出旋律。请先试听，再生成伴奏。':
       'A melody was recognized from this recording. Preview it, then make an accompaniment.',
@@ -637,6 +650,100 @@ window.CoLocale = (() => {
       'Not enough sound was detected. Move closer and hum a clear melody.',
     录音是空的: 'The recording is empty',
     '已从录音中识别出旋律。': 'A melody was recognized from the recording.',
+    '风格会交给 Hum-to-Song V0，发展成前奏、主题、发展和结尾。':
+      'The style is handled by Hum-to-Song V0, which builds an intro, theme, development, and ending.',
+    '用麦克风哼 5 到 15 秒，或上传一段短音频。识别之后可以选择轻量语义生成、旋律覆盖，或继续用 Hum-to-Song V0。':
+      'Hum for 5 to 15 seconds, or upload a short recording. Then choose a light semantic generation, a melody cover, or Hum-to-Song V0.',
+    '把哼唱变成一首曲子。': 'Turn a hum into a piece of music.',
+    '先留下一段旋律，再选一种感觉。同一段可以换成不同风格，不用重新录。':
+      'Keep one melody, then try another feeling. You can change the style without recording again.',
+    '哼一段，或上传一小段旋律。它会被写成一首大约一分钟的完整纯音乐。':
+      'Hum a phrase, or upload a short melody. It becomes a complete instrumental of about one minute.',
+    '哼一段，或上传一小段旋律。然后生成一首完整音乐，或进入编曲工作台自己编。':
+      'Hum a phrase, or upload a short melody. Then generate a complete piece, or arrange it yourself.',
+    '生成音乐，或自己编曲': 'Generate music, or arrange it yourself',
+    创作要求: 'A note for the piece',
+    还想怎么改: 'Anything you want to change',
+    '可选。例如：更安静，结尾再柔和一些': 'Optional. For example: quieter, with a softer ending',
+    生成我的音乐: 'Generate my music',
+    进入编曲工作台: 'Open the arrangement desk',
+    '生成大约需要几分钟。完成后可以在下面试听和下载。':
+      'Generation takes a few minutes. You can listen and download it below when it is ready.',
+    '生成大约需要几分钟。也可以把识别出的旋律送进编曲工作台，换乐器、改音轨并播放。':
+      'Generation takes a few minutes. You can also send the recognized melody to the arrangement desk, change instruments, edit tracks, and play.',
+    示例: 'Example',
+    '这是一段预先生成的完整作品，可以和原始哼唱对照着听。':
+      'This is a piece prepared ahead of time. Compare it with the original hum.',
+    生成的作品: 'Generated piece',
+    我的音乐: 'My music',
+    '旋律已经听出来了。可以写下想法，再生成。':
+      'The melody is ready. Add a note if you want, then generate.',
+    记录灵感: 'Capture an idea',
+    听原始录音: 'Play the original recording',
+    上传一小段旋律: 'Upload a short melody',
+    'WAV、MP3、M4A，15 秒以内': 'WAV, MP3, or M4A, up to 15 seconds',
+    '录完或上传后会自动听出旋律。':
+      'The melody is recognized automatically after recording or upload.',
+    听这段旋律: 'Play this melody',
+    '录音和上传只留在这台浏览器里。音高识别使用 Spotify Basic Pitch 1.0.1（Apache-2.0，Copyright 2022 Spotify AB）。':
+      'Recording and uploads stay in this browser. Pitch recognition uses Spotify Basic Pitch 1.0.1 (Apache-2.0, Copyright 2022 Spotify AB).',
+    '旋律识别还没准备好。请先运行 npm run pitch-model，再用 npm start 打开页面。':
+      'Melody recognition is not ready. Run npm run pitch-model, then open the page with npm start.',
+    风格和想法: 'Style and direction',
+    描述你想要的音乐: 'Describe the music you want',
+    还想调整什么: 'Anything else to adjust',
+    '例如：安静一点，像夜里的城市': 'For example: quieter, like a city at night',
+    '可选。例如：更轻一点，结尾慢慢收住': 'Optional. For example: lighter, with a slow ending',
+    高级设置: 'Advanced',
+    旋律优先: 'Melody first',
+    '让成品更贴近你哼的音。它仍然是一首新的曲子，不是逐音复制。':
+      'Keep the result closer to what you hummed. It is still a new piece, not a note-for-note copy.',
+    '没有哼唱，直接写一段描述': 'No hum — write a description instead',
+    改回使用这段哼唱: 'Go back to this hum',
+    作品: 'Piece',
+    生成这首: 'Generate this piece',
+    '一次只做一首，完成前不会开始下一首。':
+      'One piece at a time. The next one waits until this one finishes.',
+    '可以换一种风格再生成，之前的版本会留在下面。':
+      'Try another style. Earlier versions stay below.',
+    '正在听你的旋律…': 'Listening to your melody…',
+    '旋律已经听出来了。可以选风格，再生成。': 'The melody is ready. Choose a style, then generate.',
+    '用文字创作时，请先写一段描述。': 'Write a description before creating from text.',
+    '请先留下一段能听出旋律的哼唱。': 'Hum a melody that can be recognized first.',
+    '这一首好了，用时 ': 'This piece is ready. It took ',
+    '创作服务还没有密钥。请在启动页面的终端设置 DEEPSEEK_API_KEY 后重新打开。':
+      'The creative service has no key yet. Set DEEPSEEK_API_KEY in the terminal that starts the page, then open it again.',
+    生成方式: 'Generation',
+    轻量语义生成: 'Light semantic generation',
+    '推荐。跟随轮廓，不逐音锁定': 'Recommended. Follows the contour without locking every note.',
+    旋律覆盖: 'Melody cover',
+    钢琴引导后再生成: 'A piano guide is generated first.',
+    文字生成: 'Text to music',
+    按你的描述写一段音乐: 'Write a piece from your description.',
+    创作要求: 'Creative note',
+    '例如：安静的钢琴与小提琴，慢慢走向结尾':
+      'For example: quiet piano and violin, settling into a gentle ending',
+    '可选。例如：更安静，结尾再柔和一些': 'Optional. For example: quieter, with a softer ending',
+    '先把识别出的旋律渲染成钢琴，再交给 ACE-Step 覆盖生成。通常需要两分钟左右。':
+      'The recognized melody is rendered as piano, then covered by ACE-Step. This usually takes about two minutes.',
+    '不使用哼唱音频。描述会按实验 C 的方式生成约 30 秒纯音乐，并保留旋律主导和完整结构。':
+      'No hum is used. Your description generates about 30 seconds of music, keeping a leading melody and a complete shape.',
+    'DeepSeek 只筛选起伏、级进动机和跳进这三项，再按轻量提示生成。它不会逐音保留原始旋律。通常需要两分钟左右。':
+      'DeepSeek only keeps contour, stepwise motifs, and leaps, then builds a light prompt. It does not preserve every original note. This usually takes about two minutes.',
+    生成音乐: 'Generate music',
+    '正在生成…': 'Generating…',
+    对照试听: 'Compare',
+    '上面是原始哼唱。下面是这次生成的作品。':
+      'The original hum is above. The generated piece is below.',
+    '轻量语义生成跟随旋律特征，不会严格保留每一个音。':
+      'Light semantic generation follows melodic character and does not keep every original note.',
+    下载生成音频: 'Download the generated audio',
+    '导出原始 MIDI': 'Export the original MIDI',
+    '文字生成需要一段创作描述。': 'Text generation needs a short description.',
+    '生成完成，用时 ': 'Finished in ',
+    ' 秒。可以对照原始哼唱试听。': ' seconds. Compare it with the original hum.',
+    生成没有完成: 'Generation did not finish',
+    生成失败: 'Generation failed',
   };
   let language = 'zh';
   try {

@@ -3,6 +3,7 @@ import { stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { audioFirstReady, generateMusic } from '../tools/ace-step/generate.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../web');
 const portIndex = process.argv.indexOf('--port');
@@ -25,12 +26,46 @@ const mime = {
 };
 
 const server = createServer(async (request, response) => {
+  const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+  if (pathname === '/api/audio-first' && request.method === 'GET') {
+    const ready = await audioFirstReady();
+    response
+      .writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
+      .end(JSON.stringify(ready));
+    return;
+  }
+  if (pathname === '/api/audio-first' && request.method === 'POST') {
+    const chunks = [];
+    let size = 0;
+    for await (const chunk of request) {
+      size += chunk.length;
+      if (size > 2 * 1024 * 1024) {
+        response.writeHead(413).end();
+        return;
+      }
+      chunks.push(chunk);
+    }
+    let body = {};
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+    } catch {
+      response
+        .writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' })
+        .end(JSON.stringify({ ok: false, error: '请求格式不正确。' }));
+      return;
+    }
+    const result = await generateMusic(body);
+    response.writeHead(result.ok ? 200 : 502, {
+      'Content-Type': 'application/json; charset=utf-8',
+    });
+    response.end(JSON.stringify(result));
+    return;
+  }
   if (!['GET', 'HEAD'].includes(request.method)) {
     response.writeHead(405, { Allow: 'GET, HEAD' }).end();
     return;
   }
   try {
-    const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
     const path = resolve(root, `.${pathname.endsWith('/') ? pathname + 'index.html' : pathname}`);
     if (!path.startsWith(root + sep)) {
       response.writeHead(403).end('Forbidden');
@@ -41,6 +76,7 @@ const server = createServer(async (request, response) => {
     response.writeHead(200, {
       'Content-Type': mime[extname(path)] || 'application/octet-stream',
       'Content-Length': info.size,
+      'Cache-Control': 'no-cache',
       'X-Content-Type-Options': 'nosniff',
     });
     if (request.method === 'HEAD') response.end();
@@ -53,6 +89,8 @@ const server = createServer(async (request, response) => {
   }
 });
 
+server.requestTimeout = 0;
+server.headersTimeout = 0;
 server.on('error', (error) => {
   console.error(error.message);
   process.exitCode = 1;

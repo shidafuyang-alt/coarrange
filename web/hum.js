@@ -6,16 +6,19 @@
     phase: 'idle',
     error: '',
     warning: '',
-    status: '准备哼唱',
+    status: '哼一段，或上传一小段旋律。',
     seconds: 0,
     blobUrl: '',
     buffer: null,
     levelHistory: [],
     notes: [],
     midiBytes: null,
-    style: 'jazz',
+    wish: '',
+    arranging: false,
     recording: false,
     service: 'checking',
+    semantic: null,
+    versions: [],
     takenName: '哼唱旋律',
   };
   let stream = null;
@@ -149,67 +152,74 @@
       ctx.fillRect(index * (bar + gap), (height - h) / 2, bar, h);
     });
   }
-  function stepIndex() {
-    if (state.phase === 'ready') return 3;
-    if (state.phase === 'transcribing') return 1;
-    if (state.phase === 'recorded' || (state.phase === 'error' && state.buffer)) return 1;
-    return 0;
+  function noteSignature(notes) {
+    return notes
+      .map(
+        (note) =>
+          `${note.pitch}:${Math.round((note.start ?? note.time) * 100)}:${Math.round(note.duration * 100)}`,
+      )
+      .join('|');
+  }
+  function versionsHtml() {
+    if (!state.versions.length) return '';
+    return `<div class="hum-versions">${state.versions
+      .map(
+        (item) => `<article class="hum-version">
+          <strong>${esc(item.label)}</strong>
+          <span>${esc(item.time)}</span>
+          <audio controls src="${item.url}"></audio>
+          <button class="btn btn-outline" data-hum="download-audio" data-url="${item.url}" data-name="${esc(item.file)}" type="button">下载这首</button>
+        </article>`,
+      )
+      .join('')}</div>`;
   }
   function view() {
-    const styles = (root.MusicCatalog && MusicCatalog.styles) || [];
-    const steps = ['1 哼唱', '2 识别', '3 试听', '4 选风格', '5 生成'];
-    const current = stepIndex();
-    const service =
-      state.service === 'ok'
-        ? '浏览器音高模型已就绪'
-        : state.service === 'down'
-          ? '音高模型没有加载。请先运行 npm run pitch-model，再用 npm start 打开页面。'
-          : '正在加载浏览器音高模型…';
+    const serviceDown = state.service === 'down';
     const noteEnd = state.notes.reduce((end, note) => Math.max(end, note.start + note.duration), 1);
     const low = state.notes.length ? Math.min(...state.notes.map((note) => note.pitch)) : 60;
     const high = state.notes.length ? Math.max(...state.notes.map((note) => note.pitch)) : 72;
-    return `<div class="view-title"><p class="eyebrow">HUM IT. HEAR IT BACK.</p><h1>哼一段旋律。</h1><p>用麦克风哼 5 到 15 秒。确认识别出的旋律后，选一种风格，生成可以播放的伴奏。</p></div>
-      <div class="hum-steps">${steps.map((label, index) => `<span class="hum-step ${index === current ? 'active' : ''} ${index < current ? 'done' : ''}">${label}</span>`).join('')}</div>
-      <div class="hum-layout">
-        <section class="panel">
-          <div class="panel-title">${icon('audio-lines')}你的哼唱</div>
+    const notesHtml = state.notes.length
+      ? `<div class="hum-roll" id="hum-roll" aria-label="识别出的旋律">${state.notes
+          .map((note) => {
+            const left = (note.start / noteEnd) * 100;
+            const width = Math.max(0.6, (note.duration / noteEnd) * 100);
+            const top = 12 + ((high - note.pitch) / Math.max(1, high - low)) * 70;
+            return `<span class="note" style="left:${left}%;width:${width}%;top:${top}%"></span>`;
+          })
+          .join('')}</div>
+          <div class="hum-actions">
+            <button class="btn btn-outline" data-hum="preview" type="button">${icon('play')}听这段旋律</button>
+            <button class="btn btn-outline" data-hum="download-midi" type="button" ${state.midiBytes ? '' : 'disabled'}>导出 MIDI</button>
+          </div>`
+      : '<p class="helper">录完或上传后会自动听出旋律。</p>';
+    return `<div class="view-title hum-page"><p class="eyebrow">HUM IT. HEAR IT BACK.</p><h1>把哼唱变成一首曲子。</h1><p>哼一段，或上传一小段旋律。然后生成一首完整音乐，或进入编曲工作台自己编。</p></div>
+      <div class="hum-flow">
+        <section class="panel hum-block">
+          <div class="panel-title">${icon('audio-lines')}记录灵感</div>
           <p class="hum-status" id="hum-status" role="status">${esc(state.status)}</p>
           <div class="hum-live"><strong id="hum-clock">${clock(state.seconds)} / ${clock(MAX_SECONDS)}</strong><span>${state.phase === 'recording' ? '正在录音' : '最长 15 秒'}</span></div>
           <canvas class="hum-meter" id="hum-meter" aria-label="录音电平"></canvas>
           ${state.error ? `<p class="hum-error" role="alert">${esc(state.error)}</p>` : ''}
           ${state.warning ? `<p class="helper">${esc(state.warning)}</p>` : ''}
           <div class="hum-actions">
-            <button class="btn btn-primary" data-hum="start" ${state.phase === 'recording' || state.phase === 'transcribing' ? 'disabled' : ''}>${icon('audio-lines')}${state.buffer ? '再录一次' : '开始哼唱'}</button>
+            <button class="btn btn-primary" data-hum="start" ${state.phase === 'recording' || state.phase === 'transcribing' || state.arranging ? 'disabled' : ''}>${icon('audio-lines')}${state.buffer ? '再录一次' : '开始哼唱'}</button>
             <button class="btn btn-outline" data-hum="stop" ${state.phase === 'recording' ? '' : 'disabled'}>停止</button>
-            <button class="btn btn-outline" data-hum="listen" ${state.blobUrl ? '' : 'disabled'}>${icon('play')}听我的录音</button>
+            <button class="btn btn-outline" data-hum="listen" ${state.blobUrl ? '' : 'disabled'}>${icon('play')}听原始录音</button>
           </div>
           <audio id="hum-audio" class="hum-audio" controls ${state.blobUrl ? '' : 'hidden'}></audio>
-          <label class="hum-drop" for="hum-file">${icon('upload')}<strong>或上传一段短音频</strong><p>WAV、MP3、M4A · 15 秒以内 · 在浏览器里识别</p><input class="file-input" id="hum-file" type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.webm"></label>
-          <p class="helper">${icon('info')}音频只在这台浏览器里处理，不会上传。适合单声部哼唱，歌曲和嘈杂背景不会准确。</p>
-          <p class="helper">音高识别使用 Spotify Basic Pitch 1.0.1（Apache-2.0，Copyright 2022 Spotify AB）。</p>
-          <p class="helper" id="hum-service">${service}</p>
+          <label class="hum-drop" for="hum-file">${icon('upload')}<strong>上传一小段旋律</strong><p>WAV、MP3、M4A，15 秒以内</p><input class="file-input" id="hum-file" type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.webm"></label>
+          ${notesHtml}
+          <p class="helper">录音和上传只留在这台浏览器里。音高识别使用 Spotify Basic Pitch 1.0.1（Apache-2.0，Copyright 2022 Spotify AB）。</p>
+          ${serviceDown ? '<p class="hum-error">旋律识别还没准备好。请先运行 npm run pitch-model，再用 npm start 打开页面。</p>' : ''}
         </section>
-        <section class="panel">
-          <div class="panel-title">${icon('music-2')}识别出的旋律</div>
-          <div class="hum-roll" id="hum-roll" aria-label="识别音符">${
-            state.notes
-              .map((note) => {
-                const left = (note.start / noteEnd) * 100;
-                const width = Math.max(0.6, (note.duration / noteEnd) * 100);
-                const top = 12 + ((high - note.pitch) / Math.max(1, high - low)) * 70;
-                return `<span class="note" style="left:${left}%;width:${width}%;top:${top}%" title="MIDI ${note.pitch}"></span>`;
-              })
-              .join('') || '<p class="hum-empty">哼完以后，旋律会显示在这里。</p>'
-          }</div>
-          <p class="helper">${state.notes.length ? `已识别 <span data-i18n-ignore>${state.notes.length}</span> 个音。可以先试听，再决定要不要重录。` : '识别完成后可以单独试听，不会马上改动编曲工作台。'}</p>
-          <div class="hum-actions">
-            <button class="btn btn-primary" data-hum="transcribe" ${state.buffer && state.phase !== 'recording' && state.phase !== 'transcribing' ? '' : 'disabled'}>${icon('sparkles')}${state.phase === 'transcribing' ? '正在识别音高…' : '识别旋律'}</button>
-            <button class="btn btn-outline" data-hum="preview" ${state.notes.length ? '' : 'disabled'}>${icon('play')}试听旋律</button>
-            <button class="btn btn-outline" data-hum="retry" ${state.notes.length || state.error ? '' : 'disabled'}>换一段再试</button>
-          </div>
-          <span class="field-label">选择伴奏风格</span>
-          <div class="hum-styles">${styles.map((style) => `<button class="style-choice ${style.id === state.style ? 'selected' : ''}" data-hum-style="${style.id}" aria-pressed="${style.id === state.style}">${icon(style.icon)}<strong>${style.name}</strong><small>${style.hint}</small></button>`).join('')}</div>
-          <button class="btn btn-pink full" data-hum="commit" ${state.notes.length ? '' : 'disabled'}>${icon('sliders-horizontal')}生成编曲</button>
+        <section class="panel hum-block" id="hum-results">
+          <div class="panel-title">${icon('sparkles')}生成音乐，或自己编曲</div>
+          <label class="field-label" for="hum-wish">还想怎么改</label>
+          <textarea id="hum-wish" class="hum-wish" maxlength="400" placeholder="可选。例如：更安静，结尾再柔和一些">${esc(state.wish)}</textarea>
+          <button class="btn btn-pink full" data-hum="generate" ${canGenerate() ? '' : 'disabled'}>${state.arranging ? '正在生成…' : '生成我的音乐'}</button>
+          <button class="btn btn-outline full" data-hum="arrange" ${canArrange() ? '' : 'disabled'}>进入编曲工作台</button>
+          <p class="helper">${state.arranging ? '一次只做一首，完成前不会开始下一首。' : '生成大约需要几分钟。也可以把识别出的旋律送进编曲工作台，换乐器、改音轨并播放。'}</p>
+          ${versionsHtml()}
         </section>
       </div>`;
   }
@@ -284,6 +294,9 @@
     state.error = '';
     state.warning = trimmed ? '已截取前 15 秒。' : '';
     state.takenName = name || '哼唱旋律';
+    state.semantic = null;
+    state.versions.forEach((item) => URL.revokeObjectURL(item.url));
+    state.versions = [];
     const problem = recordingProblem(state.seconds, bufferLevel(buffer));
     if (state.blobUrl) URL.revokeObjectURL(state.blobUrl);
     state.blobUrl = URL.createObjectURL(
@@ -294,8 +307,11 @@
       state.error = problem;
       state.status = '这段录音还不能识别';
     } else {
-      state.phase = 'recorded';
-      state.status = '录音完成，可以听一遍，也可以直接识别。';
+      state.phase = 'transcribing';
+      state.status = '正在听你的旋律…';
+      refresh();
+      transcribe();
+      return;
     }
     refresh();
   }
@@ -572,7 +588,7 @@
       state.midiBytes =
         payload.midi instanceof Uint8Array ? payload.midi : Uint8Array.from(payload.midi);
       state.phase = 'ready';
-      state.status = payload.message || '已从录音中识别出旋律。';
+      state.status = payload.message || '旋律已经听出来了。可以写下想法，再生成。';
       state.warning = '';
       refresh();
     } catch (error) {
@@ -582,9 +598,87 @@
       refresh();
     }
   }
+  function canGenerate() {
+    if (state.arranging || state.phase === 'recording' || state.phase === 'transcribing')
+      return false;
+    return state.notes.length >= 2;
+  }
+  function canArrange() {
+    if (state.arranging || state.phase === 'recording' || state.phase === 'transcribing')
+      return false;
+    return state.notes.length >= 2 && !!state.midiBytes;
+  }
+  async function generatePiece() {
+    if (!canGenerate()) {
+      state.error = '请先留下一段能听出旋律的哼唱。';
+      refresh();
+      return;
+    }
+    pausePageAudio();
+    state.arranging = true;
+    state.error = '';
+    const signature = noteSignature(state.notes);
+    const cached = state.semantic && state.semantic.signature === signature ? state.semantic : null;
+    const started = Date.now();
+    state.status = '正在生成… 0 秒';
+    refresh();
+    const clockTimer = setInterval(() => {
+      const node = document.querySelector('#hum-status');
+      const seconds = Math.round((Date.now() - started) / 1000);
+      state.status = `正在生成… ${seconds} 秒`;
+      if (node) node.textContent = state.status;
+    }, 1000);
+    try {
+      const response = await fetch('/api/audio-first', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wish: state.wish,
+          cachedFeatures: cached ? cached.features : null,
+          cachedAnalysis: cached ? cached.analysis : '',
+          notes: state.notes.map((note) => ({
+            pitch: note.pitch,
+            start: note.start ?? note.time,
+            duration: note.duration,
+            velocity: note.velocity || 80,
+          })),
+        }),
+      });
+      const payload = await response.json();
+      if (!payload.ok) throw Error(payload.error || '生成没有完成');
+      if (payload.features) {
+        state.semantic = {
+          signature,
+          features: payload.features,
+          analysis: payload.analysis || '',
+        };
+      }
+      const binary = atob(payload.audioBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+      state.versions.unshift({
+        label: '我的音乐',
+        time: `用时 ${payload.seconds} 秒`,
+        url: URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' })),
+        file: 'coarrange-piece.wav',
+      });
+      state.phase = 'ready';
+      state.status = `这一首好了，用时 ${payload.seconds} 秒。`;
+    } catch (error) {
+      state.phase = state.notes.length ? 'ready' : state.buffer ? 'recorded' : 'idle';
+      state.error = error && error.message ? error.message : '生成失败';
+      state.status = '生成没有完成';
+    } finally {
+      clearInterval(clockTimer);
+      state.arranging = false;
+      refresh();
+      const results = document.querySelector('#hum-results');
+      if (results) results.scrollIntoView({ block: 'nearest' });
+    }
+  }
   async function commit() {
     if (!state.notes.length || !state.midiBytes) {
-      state.error = '请先识别出旋律，再生成编曲。';
+      state.error = '请先识别出旋律，再生成作品。';
       refresh();
       return;
     }
@@ -594,9 +688,8 @@
     const file = new File([bytes], name.endsWith('.mid') ? name : name + '.mid', {
       type: 'audio/midi',
     });
-    const imported = await root.CoStudio.importMidi(file);
+    const imported = await root.CoStudio.loadSong(file, 'jazz');
     if (imported === false) return;
-    await root.CoStudio.preset(state.style);
     if (typeof setView === 'function') setView('arrange');
   }
   function retry() {
@@ -609,37 +702,46 @@
     refresh();
   }
   function checkService() {
-    state.service = root.CoPitch ? 'ok' : 'down';
-    const node = document.querySelector('#hum-service');
-    if (!node || (location.hash || '#home').slice(1) !== 'hum') return;
-    node.textContent = tr(
-      state.service === 'ok'
-        ? '浏览器音高模型已就绪'
-        : '音高模型没有加载。请先运行 npm run pitch-model，再用 npm start 打开页面。',
-    );
+    const next = root.CoPitch ? 'ok' : 'down';
+    if (state.service === next) return;
+    state.service = next;
+    if ((location.hash || '#home').slice(1) === 'hum') refresh();
+  }
+  function downloadUrl(url, name) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.click();
+  }
+  function downloadBytes(bytes, name, type) {
+    const url = URL.createObjectURL(new Blob([bytes], { type }));
+    downloadUrl(url, name);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
   if (typeof document !== 'undefined') {
     document.addEventListener('click', (event) => {
-      const styleButton = event.target.closest('[data-hum-style]');
-      if (styleButton) {
-        state.style = styleButton.dataset.humStyle;
-        document.querySelectorAll('[data-hum-style]').forEach((button) => {
-          const selected = button.dataset.humStyle === state.style;
-          button.classList.toggle('selected', selected);
-          button.setAttribute('aria-pressed', String(selected));
-        });
-        return;
-      }
       const button = event.target.closest('[data-hum]');
       if (!button || button.disabled) return;
       const action = button.dataset.hum;
       if (action === 'start') start();
       if (action === 'stop') stopRecording();
       if (action === 'listen') listen();
-      if (action === 'transcribe') transcribe();
       if (action === 'preview') preview();
-      if (action === 'retry') retry();
-      if (action === 'commit') commit();
+      if (action === 'generate') generatePiece();
+      if (action === 'arrange') commit();
+      if (action === 'download-audio' && button.dataset.url)
+        downloadUrl(button.dataset.url, button.dataset.name || 'coarrange.wav');
+      if (action === 'download-midi' && state.midiBytes)
+        downloadBytes(state.midiBytes, 'coarrange-melody.mid', 'audio/midi');
+    });
+    document.addEventListener('input', (event) => {
+      if (event.target && event.target.id === 'hum-wish') {
+        state.wish = event.target.value;
+        const generate = document.querySelector('[data-hum="generate"]');
+        const arrange = document.querySelector('[data-hum="arrange"]');
+        if (generate) generate.disabled = !canGenerate();
+        if (arrange) arrange.disabled = !canArrange();
+      }
     });
     document.addEventListener('change', (event) => {
       if (event.target && event.target.id === 'hum-file')
