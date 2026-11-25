@@ -3,12 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#f7f5f8" />
+    <meta name="theme-color" content="#161e1a" />
     <meta
       name="description"
-      content="CoArrange，让每一个音乐念头都有回声。创作、改编与试听的互动演示。"
+      content="MusicCraft，让每一个音乐念头都有回声。创作、改编与试听的互动演示。"
     />
-    <title>CoArrange · 让灵感有回声</title>
+    <title>MusicCraft · 让灵感有回声</title>
+    <link rel="icon" type="image/svg+xml" href="assets/musiccraft-mark.svg" />
     <script>
       try {
         const p = JSON.parse(localStorage.getItem('coarrange-preferences') || '{}');
@@ -22,7 +23,11 @@
     <link rel="stylesheet" href="song-case.css" />
     <link rel="stylesheet" href="expanded-music.css" />
     <link rel="stylesheet" href="remix-deck.css" />
+    <link rel="stylesheet" href="agent.css" />
+    <link rel="stylesheet" href="art-direction.css" />
+    <link rel="stylesheet" href="library.css" />
     <script defer src="assets/lucide.min.js"></script>
+    <script defer src="locale-extra.js"></script>
     <script defer src="i18n.js"></script>
     <script defer src="music-catalog.js"></script>
     <script defer src="sampler.js"></script>
@@ -32,6 +37,9 @@
     <script defer src="song-waveforms.js"></script>
     <script defer src="song-case.js"></script>
     <script defer src="remix-deck.js"></script>
+    <script defer src="agent-ui.js"></script>
+    <script defer src="model-settings.js"></script>
+    <script defer src="library.js"></script>
     <script defer src="app.js"></script>
     <script defer src="preferences.js"></script>
   </head>
@@ -43,27 +51,36 @@
       tabindex="-1"
     ></button>
     <aside class="sidebar" id="main-sidebar">
-      <a href="#home" class="brand" aria-label="CoArrange 首页"
-        ><span class="brand-mark"><i data-lucide="audio-lines"></i></span
-        ><span>CoArrange<span class="brand-sub">让灵感有回声</span></span></a
-      >
-      <button class="new-project" data-view="create">
+      <a href="#workspace" class="brand" aria-label="MusicCraft 首页">
+        <span class="brand-mark" aria-hidden="true"
+          ><svg viewBox="0 0 40 44" fill="none">
+            <path
+              d="M6 32V14c0-5 5-6 8-2l6 10 6-10c3-4 8-3 8 2v18M6 23c8-10 20 10 28 0"
+              stroke="currentColor"
+              stroke-width="2.3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            /></svg
+        ></span>
+        <span class="brand-type"
+          ><span class="brand-name" data-i18n-ignore>Music<em>Craft</em><sup>✳</sup></span
+          ><span class="brand-sub">让灵感有回声</span></span
+        >
+      </a>
+      <button class="new-project" data-view="workspace">
         <i data-lucide="plus"></i> 开始创作 <span>⌘ K</span>
       </button>
       <div class="sidebar-scroll">
         <div class="nav-label">工作空间</div>
         <nav aria-label="主导航">
-          <button class="nav-item active" data-view="home">
-            <i data-lucide="house"></i>为你推荐
-          </button>
-          <button class="nav-item" data-view="create">
-            <i data-lucide="sparkles"></i>灵感创作
-          </button>
-          <button class="nav-item" data-view="transform">
-            <i data-lucide="shuffle"></i>风格转换
+          <button class="nav-item active" data-view="workspace">
+            <i data-lucide="sparkles"></i>创作与改编
           </button>
           <button class="nav-item" data-view="arrange">
             <i data-lucide="sliders-horizontal"></i>编曲工作台<span class="nav-mini">PRO</span>
+          </button>
+          <button class="nav-item" data-view="examples">
+            <i data-lucide="headphones"></i>风格试听与对比
           </button>
         </nav>
         <div class="nav-label second">我的音乐</div>
@@ -76,7 +93,7 @@
         <div class="sidebar-note">
           <i data-lucide="headphones"></i>
           <p>不懂乐理，也可以<br />从喜欢的声音开始。</p>
-          <button data-action="help">认识 CoArrange <i data-lucide="chevron-right"></i></button>
+          <button data-action="help">认识 MusicCraft <i data-lucide="chevron-right"></i></button>
         </div>
       </div>
       <div class="sidebar-bottom">
@@ -84,7 +101,7 @@
           <i data-lucide="settings-2"></i>偏好设置
         </button>
         <div class="profile">
-          <span class="avatar">C</span>
+          <span class="avatar">M</span>
           <div><strong>我的创作空间</strong><span>本地保存 · 无需登录</span></div>
           <i data-lucide="chevrons-up-down"></i>
         </div>
@@ -123,7 +140,7 @@
       </header>
       <main id="main" tabindex="-1"></main>
       <footer class="page-footer">
-        <span>MADE FOR YOUR NEXT IDEA.</span><span>CoArrange · 课程项目初版</span>
+        <span>MADE FOR YOUR NEXT IDEA.</span><span>MusicCraft · 课程项目初版</span>
       </footer>
     </div>
     <section class="player" aria-label="音乐播放器">

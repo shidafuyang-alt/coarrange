@@ -2,6 +2,9 @@
 // UI copy only. User-entered text and uploaded filenames are never translated.
 window.CoLocale = (() => {
   const dictionary = {
+    ...window.MusicCraftMessages,
+    创作与改编: 'Create and restyle',
+    风格试听与对比: 'Listen and compare',
     '编曲，放开玩。': 'Make it playful. Make it yours.',
     '让二胡领唱，让贝斯蹦迪。换乐器、加声部，亲手听见反差。':
       'Let an erhu lead and a bassline dance. Swap instruments and add parts.',
@@ -80,8 +83,8 @@ window.CoLocale = (() => {
       'Demucs isolates the vocal, CREPE transcribes its notes and slides, and the chords are read from the backing. Five new versions play that same line on sampled or synthesized instruments, with no source audio mixed in.',
     '早期版本由本地 ACE-Step 模型直接生成，旋律容易走样，保留作对比。所有版本已匹配响度；MIDI 工作台使用另一首原创示例。':
       'The early versions came straight from a local ACE-Step model, whose melody tends to drift; they are kept for comparison. All versions are loudness-matched. The MIDI workbench uses a separate original example.',
-    '提前制作的真实改编案例。上传其他歌曲的实时改编尚未开放。':
-      'A real example, prepared in advance. Live rearrangement of other uploads is not available yet.',
+    '这里是提前制作的改编案例；上传歌曲可使用上方的创作与改编工作区。':
+      'These examples were prepared in advance. Use the create and restyle workspace above to upload your own song.',
     西北喜宴: 'Northwest wedding',
     '唢呐、二胡与锣鼓': 'Suona, erhu, gongs',
     '早期 AI 改编': 'Early AI cover',
@@ -268,7 +271,7 @@ window.CoLocale = (() => {
       'You can save up to 30 links. Remove one before adding another.',
     '浏览器暂时无法保存，请检查本地存储设置。':
       'Your browser could not save this link. Check its local storage settings.',
-    'CoArrange 首页': 'CoArrange home',
+    'MusicCraft 首页': 'MusicCraft home',
     '−1 半音': '−1 semitone',
     '＋1 半音': '+1 semitone',
     让灵感有回声: 'Give your ideas a voice',
@@ -286,14 +289,14 @@ window.CoLocale = (() => {
     我的收藏: 'Favorites',
     '不懂乐理，也可以': 'No music theory needed.',
     '从喜欢的声音开始。': 'Start with a sound you love.',
-    '认识 CoArrange': 'Meet CoArrange',
+    '认识 MusicCraft': 'Meet MusicCraft',
     偏好设置: 'Preferences',
     我的创作空间: 'My workspace',
     '本地保存 · 无需登录': 'Saved locally · No sign-in',
     你的音乐工作室: 'Your music studio',
     交互演示版: 'Interactive demo',
     使用帮助: 'Help',
-    'CoArrange · 课程项目初版': 'CoArrange · Course project prototype',
+    'MusicCraft · 课程项目初版': 'MusicCraft · Course project prototype',
     音乐播放器: 'Music player',
     当前音乐封面: 'Current artwork',
     收藏当前音乐: 'Favorite this version',
@@ -475,8 +478,8 @@ window.CoLocale = (() => {
     '切换版本会尽量保留播放位置，方便比较编曲差异。':
       'Switching versions keeps your listening position where possible.',
     从喜欢的声音开始: 'Start with a sound you love',
-    'CoArrange 是一个面向音乐初学者的创作工作台。先试听，再选择一种方式开始。':
-      'CoArrange is a music workspace for beginners. Have a listen, then choose a way to start.',
+    'MusicCraft 是一个面向音乐初学者的创作工作台。先试听，再选择一种方式开始。':
+      'MusicCraft is a music workspace for beginners. Have a listen, then choose a way to start.',
     '用日常语言描述想法，查看编曲计划和对应的固定试听样例。':
       'Describe an idea in everyday language, then explore a plan and prepared example.',
     '比较流行与古典编配；上传文件可本地试听，尚不支持实时改编。':
@@ -560,12 +563,12 @@ window.CoLocale = (() => {
     修订: 'Revision',
     夏日主题: 'Summer theme',
   };
+  Object.assign(dictionary, window.MusicCraftMessages || {});
   let language = 'zh';
   try {
     const p = JSON.parse(localStorage.getItem('coarrange-preferences') || '{}');
     if (p.language === 'en') language = 'en';
   } catch {}
-  const replacements = Object.entries(dictionary).sort((a, b) => b[0].length - a[0].length);
   const originalText = new WeakMap(),
     originalAttrs = new WeakMap();
   function text(value) {
@@ -573,22 +576,25 @@ window.CoLocale = (() => {
     const str = String(value),
       key = str.trim();
     if (Object.hasOwn(dictionary, key)) return str.replace(key, dictionary[key]);
-    // Replace once against the original string; do not re-translate inserted English.
-    let out = '',
-      pos = 0;
-    while (pos < str.length) {
-      let found = false;
-      for (const [zh, en] of replacements) {
-        if (str.startsWith(zh, pos)) {
-          out += en;
-          pos += zh.length;
-          found = true;
-          break;
-        }
-      }
-      if (!found) out += str[pos++];
-    }
-    return out;
+    // Only complete UI phrases and explicit templates are translated. Never replace words inside arbitrary text.
+    const templates = [
+      [/^(\d+) 个版本 · 保存在此浏览器$/, (_, n) => `${n} versions · saved in this browser`],
+      [/^真实模型输出 · (.+)$/, (_, model) => `Live model output · ${model}`],
+      [/^MIDI (\d+)$/, (_, note) => `MIDI ${note}`],
+      [
+        /^(.+?)(前八小节音符|音量)$/,
+        (_, name, suffix) =>
+          `${dictionary[name] || name} ${suffix === '音量' ? 'volume' : 'first eight bars'}`,
+      ],
+      [
+        /^(静音|独奏|移除|试听)(.+)$/,
+        (_, action, name) =>
+          `${{ 静音: 'Mute', 独奏: 'Solo', 移除: 'Remove', 试听: 'Play' }[action]} ${dictionary[name] || name}`,
+      ],
+    ];
+    for (const [pattern, replace] of templates)
+      if (pattern.test(key)) return str.replace(key, key.replace(pattern, replace));
+    return str;
   }
   function apply(root = document.body) {
     if (!root) return;
@@ -624,7 +630,7 @@ window.CoLocale = (() => {
     }
     document.documentElement.lang = language === 'en' ? 'en' : 'zh-CN';
     document.title =
-      language === 'en' ? 'CoArrange · Give your ideas a voice' : 'CoArrange · 让灵感有回声';
+      language === 'en' ? 'MusicCraft · Give your ideas a voice' : 'MusicCraft · 让灵感有回声';
   }
   return {
     text,
@@ -635,6 +641,7 @@ window.CoLocale = (() => {
     setLanguage(next) {
       language = next === 'en' ? 'en' : 'zh';
       apply();
+      window.dispatchEvent(new Event('musiccraft-language-changed'));
     },
   };
 })();

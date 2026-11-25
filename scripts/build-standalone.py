@@ -1,4 +1,4 @@
-"""Bundle CoArrange into a portable offline HTML file without a server."""
+"""Bundle MusicCraft previews into a portable offline HTML file without a server."""
 import base64
 import json
 import mimetypes
@@ -7,7 +7,7 @@ import re
 
 ROOT = Path(__file__).resolve().parent
 DIST = ROOT.parent / "web"
-OUTPUT = ROOT.parent / "artifacts" / "CoArrange_Shareable.html"
+OUTPUT = ROOT.parent / "artifacts" / "MusicCraft_Shareable.html"
 OUTPUT.parent.mkdir(exist_ok=True)
 assets = {}
 for path in sorted((DIST / "assets").rglob("*")):
@@ -26,6 +26,7 @@ window.CoAssets=(()=>{
   function url(path){if(!urls.has(path))urls.set(path,URL.createObjectURL(new Blob([bytes(path)],{type:assets[path].mime})));return urls.get(path)}
   async function fetchAsset(path){if(!assets[path])throw Error('Missing embedded asset: '+path);return new Response(bytes(path),{status:200,headers:{'Content-Type':assets[path].mime}})}
   document.querySelectorAll('[data-co-src]').forEach(el=>{el.src=url(el.dataset.coSrc);el.removeAttribute('data-co-src')});
+  document.querySelectorAll('[data-co-href]').forEach(el=>{el.href=url(el.dataset.coHref);el.removeAttribute('data-co-href')});
   return {url,fetch:fetchAsset};
 })();
 """.replace("ASSET_PAYLOAD", json.dumps(assets, separators=(",", ":")))
@@ -48,8 +49,19 @@ def inline_script(source):
 
 
 html = (DIST / "index.html").read_text()
-html = re.sub(r'<link rel="stylesheet" href="([^"]+)"\s*/?>',
-              lambda m: "<style>\n" + (DIST / m[1]).read_text() + "\n</style>", html)
+def inline_stylesheet(match):
+    source = (DIST / match[1]).read_text()
+    # Fonts remain available when the shareable file is opened without a network.
+    def embed_url(url_match):
+        path = url_match[1]
+        if path not in assets:
+            return url_match[0]
+        asset = assets[path]
+        return "url('data:" + asset["mime"] + ";base64," + asset["data"] + "')"
+    source = re.sub(r"url\(['\"]?(assets/[^)'\"]+)['\"]?\)", embed_url, source)
+    return "<style>\n" + source + "\n</style>"
+
+html = re.sub(r'<link rel="stylesheet" href="([^"]+)"\s*/?>', inline_stylesheet, html)
 scripts = []
 def collect_script(match):
     path = match[1]
@@ -58,6 +70,7 @@ def collect_script(match):
     return ""
 html = re.sub(r'<script defer src="([^"]+)"></script>', collect_script, html)
 html = re.sub(r'src="(assets/[^"]+)"', r'data-co-src="\1"', html)
+html = re.sub(r'href="(assets/[^"]+)"', r'data-co-href="\1"', html)
 all_scripts = [bootstrap] + scripts
 tail = "\n".join("<script>\n" + re.sub(r"</script", r"<\\/script", script, flags=re.I)
                    + "\n</script>" for script in all_scripts)

@@ -1,0 +1,6 @@
+# Stage 1 only: stable Apple Silicon packages matching setup_gpu.sh versions.
+# Install inside a Python 3.10 virtual environment on macOS; no CUDA index URL.
+torch==2.4.0
+torchvision==0.19.0
+torchaudio==2.4.0
+numpy==1.26.4

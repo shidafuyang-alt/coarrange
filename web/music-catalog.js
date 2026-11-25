@@ -366,7 +366,7 @@ window.MusicCatalog = {
       id: 'reggae',
       name: '雷鬼',
       en: 'Reggae',
-      icon: 'palm-tree',
+      icon: 'tree-palm',
       hint: '反拍吉他与松弛低音',
       enHint: 'Offbeat guitar and deep relaxed bass',
       parts: ['trumpet', 'clean', 'bass', 'organ', 'drums'],

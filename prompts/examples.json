@@ -1,0 +1,77 @@
+[
+  {
+    "input": {
+      "mode": "create",
+      "instruction": "雨天听的纯音乐，钢琴和弦乐，安静一点",
+      "controls": { "duration": 20, "instrumental": true, "seed": 42 }
+    },
+    "output": {
+      "status": "ready",
+      "summary": "创作一段安静的雨天钢琴与弦乐纯音乐。",
+      "questions": [],
+      "unsupported": [],
+      "task": "text2music",
+      "caption": "Quiet intimate piano and warm sustained strings, reflective rainy-day atmosphere, gentle dynamics, instrumental, no singing.",
+      "lyrics": "[Instrumental]",
+      "instrumental": true,
+      "instruments": ["piano", "strings"],
+      "duration": 20,
+      "bpm": null,
+      "key_scale": "",
+      "seed": 42,
+      "cover_strength": 0.65,
+      "preserve": { "melody": false, "lyrics": false, "backing": false },
+      "warnings": []
+    }
+  },
+  {
+    "input": {
+      "mode": "restyle",
+      "instruction": "改成木吉他流行风，尽量保留旋律",
+      "controls": { "duration": 20, "instrumental": true, "seed": 42 }
+    },
+    "output": {
+      "status": "ready",
+      "summary": "以原音频为条件，尝试木吉他流行改编。",
+      "questions": [],
+      "unsupported": [],
+      "task": "cover",
+      "caption": "Acoustic pop arrangement with fingerpicked steel-string guitar, warm bass and restrained percussion. Retain the recognizable source melody and structure where possible. Instrumental, no singing.",
+      "lyrics": "[Instrumental]",
+      "instrumental": true,
+      "instruments": ["steel-string guitar", "bass", "percussion"],
+      "duration": 20,
+      "bpm": null,
+      "key_scale": "",
+      "seed": 42,
+      "cover_strength": 0.65,
+      "preserve": { "melody": true, "lyrics": false, "backing": false },
+      "warnings": ["旋律保留需要试听验证。"]
+    }
+  },
+  {
+    "input": {
+      "mode": "restyle",
+      "instruction": "用我的参考录音克隆我的声音，原伴奏完全不变",
+      "controls": { "duration": 20, "instrumental": false, "seed": 42 }
+    },
+    "output": {
+      "status": "unsupported",
+      "summary": "当前音乐工具不支持个人音色克隆或精确保留原伴奏。",
+      "questions": [],
+      "unsupported": ["个人歌声音色克隆", "原伴奏完全不变"],
+      "task": "cover",
+      "caption": "Vocal cover requested, execution blocked pending a dedicated voice conversion tool.",
+      "lyrics": "",
+      "instrumental": false,
+      "instruments": [],
+      "duration": 20,
+      "bpm": null,
+      "key_scale": "",
+      "seed": 42,
+      "cover_strength": 0.65,
+      "preserve": { "melody": true, "lyrics": true, "backing": true },
+      "warnings": []
+    }
+  }
+]

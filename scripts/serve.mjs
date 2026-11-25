@@ -3,10 +3,14 @@ import { stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { configuration } from '../server/config.mjs';
+import { createAPI } from '../server/api.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../web');
+const config = await configuration(resolve(root, '..'));
+const api = await createAPI(config);
 const portIndex = process.argv.indexOf('--port');
-const port = Number(portIndex >= 0 ? process.argv[portIndex + 1] : 8788);
+const port = Number(portIndex >= 0 ? process.argv[portIndex + 1] : config.port);
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error('Provide a valid port between 1 and 65535.');
 }
@@ -17,6 +21,8 @@ const mime = {
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
+  '.ttf': 'font/ttf',
+  '.svg': 'image/svg+xml',
   '.m4a': 'audio/mp4',
   '.mp3': 'audio/mpeg',
   '.wav': 'audio/wav',
@@ -25,6 +31,19 @@ const mime = {
 };
 
 const server = createServer(async (request, response) => {
+  const host = request.headers.host || '';
+  if (!/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) {
+    response.writeHead(403).end('Use localhost or 127.0.0.1');
+    return;
+  }
+  let requestURL;
+  try {
+    requestURL = new URL(request.url, `http://${host}`);
+  } catch {
+    response.writeHead(400).end('Invalid request URL');
+    return;
+  }
+  if (await api.handle(request, response, requestURL)) return;
   if (!['GET', 'HEAD'].includes(request.method)) {
     response.writeHead(405, { Allow: 'GET, HEAD' }).end();
     return;
@@ -57,4 +76,9 @@ server.on('error', (error) => {
   console.error(error.message);
   process.exitCode = 1;
 });
-server.listen(port, '127.0.0.1', () => console.log(`CoArrange: http://localhost:${port}`));
+server.listen(port, '127.0.0.1', () => console.log(`MusicCraft: http://localhost:${port}`));
+for (const signal of ['SIGINT', 'SIGTERM'])
+  process.once(signal, () => {
+    api.close();
+    server.close();
+  });
